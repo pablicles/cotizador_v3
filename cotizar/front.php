@@ -5,7 +5,7 @@
 				<h5>Caja</h5>
 			</div>
 		</div>
-		<div class="form">
+		<form class="form">
 			<div class="row">
 				<div class="col-12 col-lg-1 mb-lg-3">
 					<label for="largo" class="form-label">Largo</label>
@@ -44,6 +44,11 @@
 					<input class="form-control" type="number" name="cantidad" placeholder="1000" required>
 				</div>
 			</div>
-		</div>
+			<div class="row">
+				<div class="col-12 text-center">
+					<button type="submit" class="btn btn-primary">Cotizar</button>
+				</div>
+			</div>
+		</form>
 	</div>
 </div>
