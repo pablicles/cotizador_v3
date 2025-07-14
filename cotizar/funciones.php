@@ -27,6 +27,32 @@ function get_materiales(mysqli $conn){
 }
 
 /**
+ * Obtiene las cajas del catálogo cuyas medidas son más próximas a las
+ * solicitadas. Las medidas se comparan sin importar el orden en que se
+ * introduzcan (largo, ancho y alto).
+ */
+function get_cajas_proximas(mysqli $conn, float $l, float $w, float $h, int $limit = 5): array
+{
+    $sql = "SELECT Nombre, Largo, Ancho, Alto FROM catalogo_productos";
+    $res = mysqli_query($conn, $sql);
+    $cajas = [];
+    if ($res) {
+        $input = [$l, $w, $h];
+        sort($input);
+        while ($row = mysqli_fetch_assoc($res)) {
+            $medidas = [(float)$row['Largo'], (float)$row['Ancho'], (float)$row['Alto']];
+            sort($medidas);
+            $diff = abs($input[0] - $medidas[0]) + abs($input[1] - $medidas[1]) + abs($input[2] - $medidas[2]);
+            $row['diff'] = $diff;
+            $cajas[] = $row;
+        }
+        usort($cajas, fn($a, $b) => $a['diff'] <=> $b['diff']);
+        $cajas = array_slice($cajas, 0, $limit);
+    }
+    return $cajas;
+}
+
+/**
  * Calcula las dimensiones de la lámina y los centímetros de suaje
  * requeridos según el tipo de armado.
  *
