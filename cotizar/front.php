@@ -46,13 +46,13 @@ $materiales = get_materiales($conn);
 					<label for="material">Material</label>
 				</div>
 				<div class="col-12 col-lg-3 mb-lg-3">
-        <select class="form-control" name="material" id="material">
-            <?php foreach($materiales as $m): ?>
-                <option value="<?php echo $m['clave']; ?>">
-                    <?php echo htmlspecialchars($m['clave']) . " - $" . number_format($m['precio_m2'], 2) . "/m²"; ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
+			        <select class="form-control" name="material" id="material">
+			            <?php foreach($materiales as $m): ?>
+			                <option value="<?php echo $m['clave']; ?>">
+			                    <?php echo htmlspecialchars($m['descripcion']) . " - $" . number_format($m['precio_m2'], 2) . "/m²"; ?>
+			                </option>
+			            <?php endforeach; ?>
+			        </select>
 				</div>
 				<div class="col-12 col-lg-1 mb-lg-3">
 					<label for="cantidad">Cantidad</label>
