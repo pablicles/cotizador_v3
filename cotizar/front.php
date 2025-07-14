@@ -1,0 +1,49 @@
+<div class="card">
+	<div class="card-body">
+		<div class="row">
+			<div class="col">
+				<h5>Caja</h5>
+			</div>
+		</div>
+		<div class="form">
+			<div class="row">
+				<div class="col-12 col-lg-1 mb-lg-3">
+					<label for="largo" class="form-label">Largo</label>
+				</div>
+				<div class="col-12 col-lg-3 mb-lg-3">
+					<input class="form-control" type="number" name="largo" placeholder="Largo" required>
+				</div>
+				<div class="col-12 col-lg-1 mb-lg-3">
+					<label for="ancho" class="form-label">Ancho</label>
+				</div>
+				<div class="col-12 col-lg-3 mb-lg-3">
+					<input class="form-control" type="number" name="ancho" placeholder="Ancho" required>
+				</div>
+				<div class="col-12 col-lg-1 mb-lg-3">
+					<label for="alto" class="form-label">Alto</label>
+				</div>
+				<div class="col-12 col-lg-3 mb-lg-3">
+					<input class="form-control" type="number" name="alto" placeholder="Alto" required>
+				</div>
+				<div class="col-12 col-lg-1 mb-lg-3">
+					<label for="armado">Armado</label>
+				</div>
+				<div class="col-12 col-lg-3 mb-lg-3">
+					<select class="form-control" name="armado" id="armado"></select>
+				</div>
+				<div class="col-12 col-lg-1 mb-lg-3">
+					<label for="material">Material</label>
+				</div>
+				<div class="col-12 col-lg-3 mb-lg-3">
+					<select class="form-control" name="material" id="material"></select>
+				</div>
+				<div class="col-12 col-lg-1 mb-lg-3">
+					<label for="cantidad">Cantidad</label>
+				</div>
+				<div class="col-12 col-lg-3 mb-lg-3">
+					<input class="form-control" type="number" name="cantidad" placeholder="1000" required>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
