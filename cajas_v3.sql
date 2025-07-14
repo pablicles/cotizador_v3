@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 14-07-2025 a las 19:52:24
+-- Tiempo de generación: 14-07-2025 a las 19:58:37
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -33,6 +33,36 @@ CREATE TABLE `armado` (
   `partes` int(1) NOT NULL,
   `referencia` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `armado`
+--
+
+INSERT INTO `armado` (`id`, `nombre`, `partes`, `referencia`) VALUES
+(1, 'Estandar (Manual sin suaje)', 1, ''),
+(2, 'Boxlunch (lonchera con asa)', 1, ''),
+(3, 'Tapa autoarmable - reforzada', 2, ''),
+(4, 'Tapa autoarmable - tipo rosca', 2, ''),
+(5, 'Estandar (Suajada)', 1, ''),
+(6, 'Estandar con tapa (Manual sin suaje)', 2, ''),
+(7, 'Estandar con tapa (Suajada)', 2, ''),
+(8, 'Dona', 1, ''),
+(9, 'Mailbox', 1, ''),
+(10, 'Pizza', 1, ''),
+(11, 'Taza autoarmable', 1, ''),
+(12, 'Taza semiarmable', 1, ''),
+(13, 'Zapatos', 1, ''),
+(14, 'Charola autoarmable reforzada', 1, ''),
+(15, 'Charola autoarmable con pestañas', 1, ''),
+(16, 'Inserto sencillo', 1, ''),
+(17, 'Inserto con pestañas', 1, ''),
+(18, 'Lamina de cartón', 1, ''),
+(19, 'Caja para palomitas', 1, ''),
+(20, 'Bolsa con handhold', 1, ''),
+(21, 'Per - Rallado, suajado', 1, ''),
+(22, 'Per - Rallado, suajado, pegado', 1, ''),
+(23, 'Per - Rallado, ranurado', 1, ''),
+(24, 'Per - Rallado, ranurado, pegado', 1, '');
 
 -- --------------------------------------------------------
 
