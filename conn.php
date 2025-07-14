@@ -4,7 +4,7 @@
 	$server="localhost";
 	$username="root";
 	$password="";
-	$db="cajas_v2";
+	$db="cajas_v3";
 
 	/*$server="localhost";
 	$username="u707159538_admin";

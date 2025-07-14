@@ -36,7 +36,7 @@ $materiales = get_materiales($conn);
 				<div class="col-12 col-lg-3 mb-lg-3">
 					<select class="form-control" name="armado" id="armado">
 						<?php foreach($armados as $a): ?>
-							<option value="<?php echo $a['id']; ?>" <?php if($a['nombre']==='Estandar (Manual sin suaje)') echo 'selected'; ?>>
+							<option value="<?php echo $a['id']; ?>" <?php if($a['id']==1) echo 'selected'; ?>>
 								<?php echo htmlspecialchars($a['nombre']); ?>
 							</option>
 						<?php endforeach; ?>
