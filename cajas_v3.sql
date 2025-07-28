@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 14-07-2025 a las 19:58:37
+-- Tiempo de generación: 28-07-2025 a las 19:34:16
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -294,6 +294,43 @@ INSERT INTO `material` (`id`, `tipo`, `clave`, `descripcion`, `resistencia`, `gr
 (37, 'lamina', 'zeni20', 'Cartulina sulfatada 20 pts', 20.00, 0.22, 9352.00, 71, 125, '2025-01-30'),
 (38, 'lamina', 'zeni20', 'Cartulina sulfatada 20 pts', 20.00, 0.22, 11837.00, 90, 125, '2025-01-30');
 
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `vendedores`
+--
+
+CREATE TABLE `vendedores` (
+  `id` int(11) NOT NULL,
+  `nombre` varchar(10) NOT NULL,
+  `apellido` varchar(20) NOT NULL,
+  `correo` varchar(30) NOT NULL,
+  `password` varchar(100) DEFAULT NULL,
+  `activo` varchar(2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `vendedores`
+--
+
+INSERT INTO `vendedores` (`id`, `nombre`, `apellido`, `correo`, `password`, `activo`) VALUES
+(2, 'Ericka', 'Miranda', 'ventas2@millop.com', NULL, 's'),
+(3, 'Gerardo', 'Xicotencatl', 'ventas3@millop.com', NULL, 's'),
+(4, 'Oscar', 'Ortiz', 'ventas4@millop.com', NULL, 's');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `ventas`
+--
+
+CREATE TABLE `ventas` (
+  `id` int(11) NOT NULL,
+  `fecha` date NOT NULL DEFAULT current_timestamp(),
+  `monto` decimal(9,2) NOT NULL,
+  `vendedor` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 --
 -- Índices para tablas volcadas
 --
@@ -311,6 +348,19 @@ ALTER TABLE `material`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indices de la tabla `vendedores`
+--
+ALTER TABLE `vendedores`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `ventas`
+--
+ALTER TABLE `ventas`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `vendedor` (`vendedor`);
+
+--
 -- AUTO_INCREMENT de las tablas volcadas
 --
 
@@ -319,6 +369,18 @@ ALTER TABLE `material`
 --
 ALTER TABLE `material`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
+
+--
+-- AUTO_INCREMENT de la tabla `vendedores`
+--
+ALTER TABLE `vendedores`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT de la tabla `ventas`
+--
+ALTER TABLE `ventas`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

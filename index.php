@@ -70,9 +70,15 @@ $action=$_GET['action']??'cotizar';
 		    <nav class="mt-2">
 		      <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
 		        <li class="nav-item">
-		          <a href="#" class="nav-link">
-		            <i class="fa-solid fa-calculator"></i>
+		          <a href="index.php?action=cotizar" class="nav-link">
+		            <i class="nav-icon fa-solid fa-calculator"></i>
 		            <p>Cotizaciones</p>
+		          </a>
+		        </li>
+		        <li class="nav-item">
+		          <a href="index.php?action=registro_ventas" class="nav-link">
+		            <i class="nav-icon fa-solid fa-cart-shopping"></i>
+		            <p>Ventas</p>
 		          </a>
 		        </li>
 		      </ul>
@@ -96,6 +102,10 @@ $action=$_GET['action']??'cotizar';
 						switch ($action) {
 							case 'cotizar':
 								require 'cotizar/front.php';
+								break;
+
+							case 'registro_ventas':
+								require 'ventas/front.php';
 								break;
 
 							case 'ver_tabla':
