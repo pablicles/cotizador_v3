@@ -332,8 +332,13 @@ CREATE TABLE `ventas` (
   `monto_venta` decimal(9,2) NOT NULL,
   `monto_envio` decimal(8,2) DEFAULT NULL,
   `monto_suaje` decimal(8,2) DEFAULT NULL,
+<<<<<<< HEAD
   `cuenta` varchar(10) NOT NULL,
   `iva` varchar(1) NOT NULL,
+=======
+  `cuenta` enum('millop','alterna') NOT NULL DEFAULT 'millop',
+  `iva` tinyint(1) NOT NULL DEFAULT 1,
+>>>>>>> origin/main
   `vendedor` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
