@@ -1,6 +1,12 @@
-<?php 
+<?php
+session_start();
 require 'conn.php';
-$action=$_GET['action']??'cotizar';
+$action = $_GET['action'] ?? 'cotizar';
+
+if (!isset($_SESSION['usuario_id'])) {
+    header('Location: login.php');
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -35,14 +41,17 @@ $action=$_GET['action']??'cotizar';
 		    </li>
 		  </ul>
 		  <!-- Right navbar icons -->
-		  <ul class="navbar-nav ml-auto">
-		  	<li class="nav-item">
-		  		<a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" role="button">
-					<i class="fa-solid fa-cloud"></i>
-				</a>
-		  	</li>
-		  </ul>
-		</nav>
+                  <ul class="navbar-nav ml-auto">
+                        <li class="nav-item">
+                                <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" role="button">
+                                        <i class="fa-solid fa-cloud"></i>
+                                </a>
+                        </li>
+                        <li class="nav-item">
+                                <a href="logout.php" class="nav-link">Cerrar sesión</a>
+                        </li>
+                  </ul>
+                </nav>
 		<!-- /.navbar -->
 
 		<!-- Main Sidebar Container -->
@@ -54,17 +63,16 @@ $action=$_GET['action']??'cotizar';
 		    <span class="brand-text font-weight-light">Cotizador 3</span>
 		  </a>
 
-		  <!-- Sidebar -->
-		  <div class="sidebar">
-		    <!-- Sidebar user panel (optional) -->
-		    <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-		    	<div class="image">
-					<img src="img/usuario.jpg" class="img-circle elevation-2" alt="User Image" width="160">
-				</div>
-		      <div class="info">
-		        <a href="#" class="d-block">Nombre</a>
-		      </div>
-		    </div>
+                  <!-- Sidebar -->
+                  <div class="sidebar">
+                    <!-- Sidebar user panel -->
+                    <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                      <div class="info">
+                        <a href="#" class="d-block">
+                          <?php echo htmlspecialchars($_SESSION['usuario_nombre'] . ' ' . $_SESSION['usuario_apellido']); ?>
+                        </a>
+                      </div>
+                    </div>
 
 		    <!-- Sidebar Menu -->
 		    <nav class="mt-2">
