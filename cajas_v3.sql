@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-07-2025 a las 19:39:43
+-- Tiempo de generación: 28-07-2025 a las 20:02:59
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -329,7 +329,9 @@ INSERT INTO `vendedores` (`id`, `nombre`, `apellido`, `correo`, `password`, `act
 CREATE TABLE `ventas` (
   `id` int(11) NOT NULL,
   `fecha` date NOT NULL DEFAULT current_timestamp(),
-  `monto` decimal(9,2) NOT NULL,
+  `monto_venta` decimal(9,2) NOT NULL,
+  `monto_envio` decimal(8,2) DEFAULT NULL,
+  `monto_suaje` decimal(8,2) DEFAULT NULL,
   `vendedor` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
