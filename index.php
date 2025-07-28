@@ -57,14 +57,14 @@ $action=$_GET['action']??'cotizar';
 		  <!-- Sidebar -->
 		  <div class="sidebar">
 		    <!-- Sidebar user panel (optional) -->
-		    <!-- <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+		    <div class="user-panel mt-3 pb-3 mb-3 d-flex">
 		    	<div class="image">
-					<img src="img/renders/<?php print($aUsuario['id']) ?>.jpg" class="img-circle elevation-2" alt="User Image" width="160">
+					<img src="img/usuario.jpg" class="img-circle elevation-2" alt="User Image" width="160">
 				</div>
 		      <div class="info">
-		        <a href="#" class="d-block"><?php print($aUsuario['nombre']." ".$aUsuario['app']); ?></a>
+		        <a href="#" class="d-block">Nombre</a>
 		      </div>
-		    </div> -->
+		    </div>
 
 		    <!-- Sidebar Menu -->
 		    <nav class="mt-2">
