@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-07-2025 a las 20:02:59
+-- Tiempo de generación: 28-07-2025 a las 20:43:05
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -332,8 +332,17 @@ CREATE TABLE `ventas` (
   `monto_venta` decimal(9,2) NOT NULL,
   `monto_envio` decimal(8,2) DEFAULT NULL,
   `monto_suaje` decimal(8,2) DEFAULT NULL,
+  `cuenta` varchar(10) NOT NULL,
+  `iva` varchar(1) NOT NULL,
   `vendedor` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `ventas`
+--
+
+INSERT INTO `ventas` (`id`, `fecha`, `monto_venta`, `monto_envio`, `monto_suaje`, `cuenta`, `iva`, `vendedor`) VALUES
+(1, '2025-07-28', 1000.00, 200.00, 100.00, '', '', 1);
 
 --
 -- Índices para tablas volcadas
@@ -384,7 +393,7 @@ ALTER TABLE `vendedores`
 -- AUTO_INCREMENT de la tabla `ventas`
 --
 ALTER TABLE `ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
