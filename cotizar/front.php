@@ -38,7 +38,7 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 					<input class="form-control" type="number" name="alto" placeholder="Alto" value="<?php echo isset($_GET['alto']) ? htmlspecialchars($_GET['alto']) : '' ?>" required>
 				</div>
 				<div class="col-12 col-lg-1 mb-lg-3">
-					<label for="armado">Armado</label>
+                                <div class="d-flex align-items-center"><label for="armado" class="form-label mb-0 me-1">Armado</label><button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#armadoModal">?</button></div>
 				</div>
 				<div class="col-12 col-lg-3 mb-lg-3">
 					<select class="form-control" name="armado" id="armado">
@@ -68,11 +68,6 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                                         <input class="form-control" type="number" name="cantidad" placeholder="1000" value="<?php echo isset($_GET['cantidad']) ? htmlspecialchars($_GET['cantidad']) : '' ?>" required>
                                 </div>
                         </div>
-                        <div class="row mb-3">
-                                <div class="col-12 text-center">
-                                        <img id="imagen_armado" src="" alt="Armado seleccionado" class="img-fluid" style="max-height:200px;">
-                                </div>
-                        </div>
 			<div class="row">
 				<div class="col-12 text-center">
 					<button type="submit" class="btn btn-primary">Cotizar</button>
@@ -81,6 +76,20 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                 </form>
         </div>
 </div>
+<div class="modal fade" id="armadoModal" tabindex="-1" aria-labelledby="armadoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="armadoModalLabel">Diagrama de armado</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="imagen_armado_modal" src="" alt="Armado seleccionado" class="img-fluid">
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <?php if (!empty($similares)): ?>
 <div class="card mt-3">
@@ -112,7 +121,7 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const armadoSelect = document.getElementById('armado');
-    const armadoImg = document.getElementById('imagen_armado');
+    const armadoImg = document.getElementById('imagen_armado_modal');
     function actualizarImagen() {
         const id = armadoSelect.value;
         armadoImg.src = 'img/' + id + '.png';
