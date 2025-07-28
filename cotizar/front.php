@@ -64,10 +64,15 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 				<div class="col-12 col-lg-1 mb-lg-3">
 					<label for="cantidad">Cantidad</label>
 				</div>
-				<div class="col-12 col-lg-3 mb-lg-3">
-					<input class="form-control" type="number" name="cantidad" placeholder="1000" value="<?php echo isset($_GET['cantidad']) ? htmlspecialchars($_GET['cantidad']) : '' ?>" required>
-				</div>
-			</div>
+                                <div class="col-12 col-lg-3 mb-lg-3">
+                                        <input class="form-control" type="number" name="cantidad" placeholder="1000" value="<?php echo isset($_GET['cantidad']) ? htmlspecialchars($_GET['cantidad']) : '' ?>" required>
+                                </div>
+                        </div>
+                        <div class="row mb-3">
+                                <div class="col-12 text-center">
+                                        <img id="imagen_armado" src="" alt="Armado seleccionado" class="img-fluid" style="max-height:200px;">
+                                </div>
+                        </div>
 			<div class="row">
 				<div class="col-12 text-center">
 					<button type="submit" class="btn btn-primary">Cotizar</button>
@@ -104,3 +109,16 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
     </div>
 </div>
 <?php endif; ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const armadoSelect = document.getElementById('armado');
+    const armadoImg = document.getElementById('imagen_armado');
+    function actualizarImagen() {
+        const id = armadoSelect.value;
+        armadoImg.src = 'img/' + id + '.png';
+        armadoImg.alt = 'Armado ' + id;
+    }
+    armadoSelect.addEventListener('change', actualizarImagen);
+    actualizarImagen();
+});
+</script>
