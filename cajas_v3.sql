@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-07-2025 a las 19:34:16
+-- Tiempo de generación: 28-07-2025 a las 19:39:43
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -306,17 +306,19 @@ CREATE TABLE `vendedores` (
   `apellido` varchar(20) NOT NULL,
   `correo` varchar(30) NOT NULL,
   `password` varchar(100) DEFAULT NULL,
-  `activo` varchar(2) NOT NULL
+  `activo` varchar(2) NOT NULL,
+  `admin` varchar(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `vendedores`
 --
 
-INSERT INTO `vendedores` (`id`, `nombre`, `apellido`, `correo`, `password`, `activo`) VALUES
-(2, 'Ericka', 'Miranda', 'ventas2@millop.com', NULL, 's'),
-(3, 'Gerardo', 'Xicotencatl', 'ventas3@millop.com', NULL, 's'),
-(4, 'Oscar', 'Ortiz', 'ventas4@millop.com', NULL, 's');
+INSERT INTO `vendedores` (`id`, `nombre`, `apellido`, `correo`, `password`, `activo`, `admin`) VALUES
+(1, 'Pablo', 'Miranda', 'pablomiranda@millop.com', NULL, 's', 's'),
+(2, 'Ericka', 'Miranda', 'ventas2@millop.com', NULL, 's', ''),
+(3, 'Gerardo', 'Xicotencatl', 'ventas3@millop.com', NULL, 's', ''),
+(4, 'Oscar', 'Ortiz', 'ventas4@millop.com', NULL, 's', '');
 
 -- --------------------------------------------------------
 
