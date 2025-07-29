@@ -1,0 +1,59 @@
+Agregar a la BD los valores por defecto que se usan en las cotizaciones:
+Procesos:
+-Costo del ranurado, actualmente $400
+-Costo del rallado, actualmente $400
+-Costo del pegado, actualmente $1000
+-Costo del empaquetado, actualmente $400
+
+Variables:
+-Costo del suaje por cm, actualmente $4
+-Utilidad, actualmente 25%
+-Merma, actualmente 10%
+-IVA, actualmente 16%
+
+Relacionar los procesos con cada caja:
+Estandar (Manual sin suaje), ranurado, rallado
+Boxlunch (lonchera con asa)
+Tapa autoarmable - reforzada
+Tapa autoarmable - tipo rosca
+Estandar (Suajada)
+Estandar con tapa (Manual sin suaje)
+Estandar con tapa (Suajada)
+Dona
+Mailbox
+Pizza
+Taza autoarmable
+Taza semiarmable
+Zapatos
+Charola autoarmable reforzada
+Charola autoarmable con pestañas
+Inserto sencillo
+Inserto con pestañas
+Lamina de cartón
+Caja para palomitas
+Bolsa con handhold
+Per - Rallado, suajado
+Per - Rallado, suajado, pegado
+Per - Rallado, ranurado
+Per - Rallado, ranurado, pegado
+
+La cotización de una caja se compone de:
+-Procesos (con sus respectivos costos de la BD o del formulario)
+-Sustrato (En el caso del corrugado se cobra por metro cuadrado)
+-Utilidad
+-Suaje
+
+Proceso para corrugado:
+-Considerar que en general los costos son para un tiro que es 1000 piezas.
+-Primero se deben obtener las medidas del sustrato usando la función obtener_datos_caja(), esta función usa el largo, ancho, alto y armado de la caja para devolver el tamaño del sustrato.
+-Con las medidas del sustrato se calculo el numero de metros necesarios para la producción de las cajas. Tambien debe agregarse a estos metros la merma.
+-La funcion obtener_datos_caja() tambien devuelve los cm necesarios para el suaje, estos cm se multiplicaran por el costo por cm del suaje (por ejemplo 200cm * $4 = $800), con esto se obtiene el precio del suaje.
+-Con el costo del suajado se determina en función del costo del suaje, para esto debe consultarse la tabla rangos_suajado, que indica el intervalo del precio del suaje y cual sería el precio del suajado.
+-Finalmente se suman los costos de los procesos, los costos del sustrato (metros necesarios para la producción de todas las cajas con merma incluida) y se aumenta la utilidad.
+
+Resultados:
+Mostrar una tabla con las filas concepto y precio.
+
+
+Consideraciones:
+-Dejar un botón de "avanzado", que despliegue un collapse con los input para poder modificar los costos de procesos, suaje, utilidad y merma en casos especiales.
