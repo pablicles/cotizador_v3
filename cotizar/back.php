@@ -16,8 +16,5 @@ $armado   = isset($_POST['armado'])   ? trim($_POST['armado'])    : '';
 // Material seleccionado
 $material = isset($_POST['material']) ? trim($_POST['material']) : '';
 
-// Cantidad de piezas solicitadas
-$cantidad = isset($_POST['cantidad']) ? (int)$_POST['cantidad']  : 0;
-
 // A partir de aqui se podra continuar con el proceso de cotizacion
 ?>
