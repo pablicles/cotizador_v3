@@ -255,4 +255,128 @@ function obtener_datos_caja($armado, $largo_caja, $ancho_caja, $alto_caja){
             break;
     }
 }
+
+function get_valor(mysqli $conn, string $nombre){
+    $stmt = mysqli_prepare($conn, "SELECT precio FROM valores WHERE nombre=? LIMIT 1");
+    if(!$stmt){
+        return 0;
+    }
+    mysqli_stmt_bind_param($stmt, 's', $nombre);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
+    $row = mysqli_fetch_assoc($res);
+    mysqli_stmt_close($stmt);
+    return $row ? (float)$row['precio'] : 0;
+}
+
+function get_material_info(mysqli $conn, string $clave): array{
+    $sql = "SELECT tipo, descripcion, MIN(CASE WHEN tipo='lamina' THEN precio * 10 /(largo_max * ancho_max) ELSE precio END) AS precio_m2
+            FROM material WHERE clave=? GROUP BY clave, tipo, descripcion LIMIT 1";
+    $stmt = mysqli_prepare($conn, $sql);
+    if(!$stmt){
+        return [];
+    }
+    mysqli_stmt_bind_param($stmt, 's', $clave);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
+    $row = mysqli_fetch_assoc($res);
+    mysqli_stmt_close($stmt);
+    return $row ?: [];
+}
+
+function get_armado_nombre(mysqli $conn, int $id): string{
+    $stmt = mysqli_prepare($conn, "SELECT nombre FROM armado WHERE id=?");
+    if(!$stmt){
+        return '';
+    }
+    mysqli_stmt_bind_param($stmt, 'i', $id);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
+    $row = mysqli_fetch_assoc($res);
+    mysqli_stmt_close($stmt);
+    return $row ? $row['nombre'] : '';
+}
+
+function get_procesos_por_armado(mysqli $conn, int $id_armado): array{
+    $sql = "SELECT p.id, p.nombre, p.precio FROM procesos p JOIN armado_procesos ap ON p.id=ap.id_proceso WHERE ap.id_armado=?";
+    $stmt = mysqli_prepare($conn, $sql);
+    $procesos = [];
+    if($stmt){
+        mysqli_stmt_bind_param($stmt, 'i', $id_armado);
+        mysqli_stmt_execute($stmt);
+        $res = mysqli_stmt_get_result($stmt);
+        while($row = mysqli_fetch_assoc($res)){
+            $procesos[] = $row;
+        }
+        mysqli_stmt_close($stmt);
+    }
+    return $procesos;
+}
+
+function get_costo_suajado(mysqli $conn, float $precio_suaje): float{
+    $sql = "SELECT precio FROM rangos_suajado WHERE ? BETWEEN rango_inf AND rango_sup LIMIT 1";
+    $stmt = mysqli_prepare($conn, $sql);
+    if($stmt){
+        mysqli_stmt_bind_param($stmt, 'd', $precio_suaje);
+        mysqli_stmt_execute($stmt);
+        $res = mysqli_stmt_get_result($stmt);
+        $row = mysqli_fetch_assoc($res);
+        mysqli_stmt_close($stmt);
+        if($row){
+            return (float)$row['precio'];
+        }
+    }
+    return 0;
+}
+
+function cotizar_corrugado(mysqli $conn, int $armado, float $largo, float $ancho, float $alto, string $material_clave): array{
+    $material = get_material_info($conn, $material_clave);
+    if(!$material){
+        return [];
+    }
+
+    $datos_caja = obtener_datos_caja($armado, $largo, $ancho, $alto);
+    $merma     = get_valor($conn, 'Merma');
+    $utilidad  = get_valor($conn, 'Utilidad');
+    $iva       = get_valor($conn, 'iva');
+    $precio_cm = get_valor($conn, 'Suaje');
+
+    $total_m2  = 0;
+    $cm_suaje  = 0;
+    foreach($datos_caja['largo_lamina'] as $i => $l){
+        $w = $datos_caja['ancho_lamina'][$i];
+        $total_m2 += ($l * $w) / 10000;
+        $cm_suaje += $datos_caja['cm_suaje'][$i];
+    }
+    $total_m2 *= (1 + $merma / 100);
+
+    $costo_material_millar = $total_m2 * $material['precio_m2'] * 1000;
+    $precio_suaje = $cm_suaje * $precio_cm;
+
+    $procesos = get_procesos_por_armado($conn, $armado);
+    $costo_procesos_millar = 0;
+    foreach($procesos as $p){
+        if($p['nombre'] === 'suajado'){
+            $costo_procesos_millar += get_costo_suajado($conn, $precio_suaje);
+        }else{
+            $costo_procesos_millar += $p['precio'];
+        }
+    }
+
+    $base_millar = $costo_material_millar + $costo_procesos_millar;
+
+    $costo_millar_sin_iva = $base_millar * (1 + $utilidad / 100);
+    $costo_millar_con_iva = $costo_millar_sin_iva * (1 + $iva / 100);
+
+    return [
+        'datos_caja'           => $datos_caja,
+        'material'             => $material,
+        'armado_nombre'        => get_armado_nombre($conn, $armado),
+        'precio_suaje'         => $precio_suaje,
+        'costo_millar_sin_iva' => $costo_millar_sin_iva,
+        'costo_millar_con_iva' => $costo_millar_con_iva,
+        'precio_pieza_sin_iva' => $costo_millar_sin_iva / 1000,
+        'precio_pieza_con_iva' => $costo_millar_con_iva / 1000,
+    ];
+}
 ?>

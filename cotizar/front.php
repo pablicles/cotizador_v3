@@ -3,11 +3,15 @@ require_once 'funciones.php';
 $armados = get_armados($conn);
 $materiales = get_materiales($conn);
 $similares = [];
+$cotizacion = [];
 if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
     $l = (float)$_GET['largo'];
     $a = (float)$_GET['ancho'];
     $h = (float)$_GET['alto'];
     $similares = get_cajas_proximas($conn, $l, $a, $h);
+    if (isset($_GET['armado'], $_GET['material'])) {
+        $cotizacion = cotizar_corrugado($conn, (int)$_GET['armado'], $l, $a, $h, $_GET['material']);
+    }
 }
 ?>
 <div class="card">
@@ -61,12 +65,6 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 			            <?php endforeach; ?>
 			        </select>
 				</div>
-				<div class="col-12 col-lg-1 mb-lg-3">
-					<label for="cantidad">Cantidad</label>
-				</div>
-                                <div class="col-12 col-lg-3 mb-lg-3">
-                                        <input class="form-control" type="number" name="cantidad" placeholder="1000" value="<?php echo isset($_GET['cantidad']) ? htmlspecialchars($_GET['cantidad']) : '' ?>" required>
-                                </div>
                         </div>
 			<div class="row">
 				<div class="col-12 text-center">
@@ -115,6 +113,30 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 				</tbody>
 			</table>
 		</div>
+    </div>
+</div>
+<?php endif; ?>
+<?php if (!empty($cotizacion)): ?>
+<div class="card mt-3">
+    <div class="card-header">
+        <h5>Resultado</h5>
+    </div>
+    <div class="card-body">
+        <p><strong>Medidas:</strong> <?php echo htmlspecialchars($l . ' x ' . $a . ' x ' . $h); ?> cm</p>
+        <p><strong>Armado:</strong> <?php echo htmlspecialchars($cotizacion['armado_nombre']); ?></p>
+        <p><strong>Material:</strong> <?php echo htmlspecialchars($cotizacion['material']['descripcion']); ?></p>
+        <p><strong>Medidas del sustrato:</strong>
+            <?php foreach ($cotizacion['datos_caja']['largo_lamina'] as $i => $ll): ?>
+                <?php
+                    $nombre = $cotizacion['datos_caja']['nombre'][$i] ?? 'Parte '.($i+1);
+                    echo htmlspecialchars($nombre . ': ' . $ll . ' x ' . $cotizacion['datos_caja']['ancho_lamina'][$i] . ' cm');
+                    if ($i < count($cotizacion['datos_caja']['largo_lamina'])-1) echo ', ';
+                ?>
+            <?php endforeach; ?>
+        </p>
+        <p><strong>Precio suaje:</strong> $<?php echo number_format($cotizacion['precio_suaje'],2); ?></p>
+        <p><strong>Precio por pieza sin IVA:</strong> $<?php echo number_format($cotizacion['precio_pieza_sin_iva'],2); ?></p>
+        <p><strong>Precio por pieza con IVA:</strong> $<?php echo number_format($cotizacion['precio_pieza_con_iva'],2); ?></p>
     </div>
 </div>
 <?php endif; ?>
