@@ -341,42 +341,57 @@ function cotizar_corrugado(mysqli $conn, int $armado, float $largo, float $ancho
     $iva       = get_valor($conn, 'iva');
     $precio_cm = get_valor($conn, 'Suaje');
 
-    $total_m2  = 0;
-    $cm_suaje  = 0;
+    $area_m2    = 0;
+    $cm_suaje   = 0;
     foreach($datos_caja['largo_lamina'] as $i => $l){
         $w = $datos_caja['ancho_lamina'][$i];
-        $total_m2 += ($l * $w) / 10000;
+        $area_m2 += ($l * $w) / 10000;
         $cm_suaje += $datos_caja['cm_suaje'][$i];
     }
-    $total_m2 *= (1 + $merma / 100);
+    $area_m2_con_merma = $area_m2 * (1 + $merma / 100);
 
-    $costo_material_millar = $total_m2 * $material['precio_m2'] * 1000;
+    $costo_material_millar = $area_m2_con_merma * $material['precio_m2'] * 1000;
     $precio_suaje = $cm_suaje * $precio_cm;
 
     $procesos = get_procesos_por_armado($conn, $armado);
+    $procesos_detalle = [];
     $costo_procesos_millar = 0;
     foreach($procesos as $p){
         if($p['nombre'] === 'suajado'){
-            $costo_procesos_millar += get_costo_suajado($conn, $precio_suaje);
+            $costo = get_costo_suajado($conn, $precio_suaje);
         }else{
-            $costo_procesos_millar += $p['precio'];
+            $costo = $p['precio'];
         }
+        $procesos_detalle[] = ['nombre' => $p['nombre'], 'costo' => $costo];
+        $costo_procesos_millar += $costo;
     }
 
     $base_millar = $costo_material_millar + $costo_procesos_millar;
-
-    $costo_millar_sin_iva = $base_millar * (1 + $utilidad / 100);
-    $costo_millar_con_iva = $costo_millar_sin_iva * (1 + $iva / 100);
+    $utilidad_monto = $base_millar * $utilidad / 100;
+    $costo_millar_sin_iva = $base_millar + $utilidad_monto;
+    $iva_monto = $costo_millar_sin_iva * $iva / 100;
+    $costo_millar_con_iva = $costo_millar_sin_iva + $iva_monto;
 
     return [
-        'datos_caja'           => $datos_caja,
-        'material'             => $material,
-        'armado_nombre'        => get_armado_nombre($conn, $armado),
-        'precio_suaje'         => $precio_suaje,
-        'costo_millar_sin_iva' => $costo_millar_sin_iva,
-        'costo_millar_con_iva' => $costo_millar_con_iva,
-        'precio_pieza_sin_iva' => $costo_millar_sin_iva / 1000,
-        'precio_pieza_con_iva' => $costo_millar_con_iva / 1000,
+        'datos_caja'              => $datos_caja,
+        'material'                => $material,
+        'armado_nombre'           => get_armado_nombre($conn, $armado),
+        'area_m2'                 => $area_m2,
+        'merma'                   => $merma,
+        'area_m2_con_merma'       => $area_m2_con_merma,
+        'precio_suaje'            => $precio_suaje,
+        'procesos'                => $procesos_detalle,
+        'costo_material_millar'   => $costo_material_millar,
+        'costo_procesos_millar'   => $costo_procesos_millar,
+        'base_millar'             => $base_millar,
+        'utilidad'                => $utilidad,
+        'utilidad_monto'          => $utilidad_monto,
+        'costo_millar_sin_iva'    => $costo_millar_sin_iva,
+        'iva'                     => $iva,
+        'iva_monto'               => $iva_monto,
+        'costo_millar_con_iva'    => $costo_millar_con_iva,
+        'precio_pieza_sin_iva'    => $costo_millar_sin_iva / 1000,
+        'precio_pieza_con_iva'    => $costo_millar_con_iva / 1000,
     ];
 }
 ?>

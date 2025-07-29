@@ -45,14 +45,14 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                                 <div class="d-flex align-items-center"><label for="armado" class="form-label mb-0 me-1">Armado</label><button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#armadoModal">?</button></div>
 				</div>
 				<div class="col-12 col-lg-3 mb-lg-3">
-					<select class="form-control" name="armado" id="armado">
-						<?php foreach($armados as $a): ?>
-							<option value="<?php echo $a['id']; ?>" <?php if($a['id']==1) echo 'selected'; ?>>
-								<?php echo htmlspecialchars($a['nombre']); ?>
-							</option>
-						<?php endforeach; ?>
-					</select>
-				</div>
+                                        <select class="form-control" name="armado" id="armado">
+                                                <?php foreach($armados as $arm): ?>
+                                                        <option value="<?php echo $arm['id']; ?>" <?php if($arm['id']==1) echo 'selected'; ?>>
+                                                                <?php echo htmlspecialchars($arm['nombre']); ?>
+                                                        </option>
+                                                <?php endforeach; ?>
+                                        </select>
+                                </div>
 				<div class="col-12 col-lg-1 mb-lg-3">
 					<label for="material">Material</label>
 				</div>
@@ -137,6 +137,27 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
         <p><strong>Precio suaje:</strong> $<?php echo number_format($cotizacion['precio_suaje'],2); ?></p>
         <p><strong>Precio por pieza sin IVA:</strong> $<?php echo number_format($cotizacion['precio_pieza_sin_iva'],2); ?></p>
         <p><strong>Precio por pieza con IVA:</strong> $<?php echo number_format($cotizacion['precio_pieza_con_iva'],2); ?></p>
+        <button class="btn btn-sm btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#desglose" aria-expanded="false" aria-controls="desglose">Ver desglose</button>
+        <div class="collapse mt-3" id="desglose">
+            <div class="card card-body">
+                <p><strong>Área de sustrato:</strong> <?php echo number_format($cotizacion['area_m2'],4); ?> m²</p>
+                <p><strong>Merma:</strong> <?php echo $cotizacion['merma']; ?>% (<?php echo number_format($cotizacion['area_m2_con_merma'] - $cotizacion['area_m2'],4); ?> m²)</p>
+                <p><strong>Área con merma:</strong> <?php echo number_format($cotizacion['area_m2_con_merma'],4); ?> m²</p>
+                <p><strong>Costo material por millar:</strong> $<?php echo number_format($cotizacion['costo_material_millar'],2); ?></p>
+                <p><strong>Procesos:</strong></p>
+                <ul>
+                <?php foreach ($cotizacion['procesos'] as $proc): ?>
+                    <li><?php echo htmlspecialchars($proc['nombre']); ?>: $<?php echo number_format($proc['costo'],2); ?></li>
+                <?php endforeach; ?>
+                </ul>
+                <p><strong>Costo procesos por millar:</strong> $<?php echo number_format($cotizacion['costo_procesos_millar'],2); ?></p>
+                <p><strong>Subtotal:</strong> $<?php echo number_format($cotizacion['base_millar'],2); ?></p>
+                <p><strong>Utilidad (<?php echo $cotizacion['utilidad']; ?>%):</strong> $<?php echo number_format($cotizacion['utilidad_monto'],2); ?></p>
+                <p><strong>Costo millar sin IVA:</strong> $<?php echo number_format($cotizacion['costo_millar_sin_iva'],2); ?></p>
+                <p><strong>IVA (<?php echo $cotizacion['iva']; ?>%):</strong> $<?php echo number_format($cotizacion['iva_monto'],2); ?></p>
+                <p><strong>Costo millar con IVA:</strong> $<?php echo number_format($cotizacion['costo_millar_con_iva'],2); ?></p>
+            </div>
+        </div>
     </div>
 </div>
 <?php endif; ?>
