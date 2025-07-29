@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-07-2025 a las 20:43:05
+-- Tiempo de generación: 29-07-2025 a las 05:42:02
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -63,6 +63,17 @@ INSERT INTO `armado` (`id`, `nombre`, `partes`, `referencia`) VALUES
 (22, 'Per - Rallado, suajado, pegado', 1, ''),
 (23, 'Per - Rallado, ranurado', 1, ''),
 (24, 'Per - Rallado, ranurado, pegado', 1, '');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `armado_procesos`
+--
+
+CREATE TABLE `armado_procesos` (
+  `id_armado` int(11) NOT NULL,
+  `id_proceso` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -297,6 +308,79 @@ INSERT INTO `material` (`id`, `tipo`, `clave`, `descripcion`, `resistencia`, `gr
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `procesos`
+--
+
+CREATE TABLE `procesos` (
+  `id` int(11) NOT NULL,
+  `nombre` varchar(20) NOT NULL,
+  `precio` double(8,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `procesos`
+--
+
+INSERT INTO `procesos` (`id`, `nombre`, `precio`) VALUES
+(1, 'Rallado', 400.00),
+(2, 'Ranurado', 400.00),
+(3, 'pegado', 1000.00),
+(4, 'empaquetado', 400.00),
+(5, 'suajado', 0.00);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `rangos_suajado`
+--
+
+CREATE TABLE `rangos_suajado` (
+  `id` int(11) NOT NULL,
+  `rango_inf` int(11) NOT NULL,
+  `rango_sup` int(11) NOT NULL,
+  `precio` decimal(8,2) NOT NULL,
+  `id_proceso` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `rangos_suajado`
+--
+
+INSERT INTO `rangos_suajado` (`id`, `rango_inf`, `rango_sup`, `precio`, `id_proceso`) VALUES
+(1, 0, 0, 0.00, 5),
+(2, 1, 500, 250.00, 5),
+(3, 501, 1000, 1000.00, 5),
+(4, 1001, 2000, 750.00, 5),
+(5, 2001, 4000, 1000.00, 5),
+(6, 4001, 10000, 2000.00, 5),
+(7, 10001, 20000, 5000.00, 5);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `valores`
+--
+
+CREATE TABLE `valores` (
+  `id` int(11) NOT NULL,
+  `nombre` varchar(20) NOT NULL,
+  `descripcion` varchar(50) NOT NULL,
+  `precio` decimal(8,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `valores`
+--
+
+INSERT INTO `valores` (`id`, `nombre`, `descripcion`, `precio`) VALUES
+(1, 'Utilidad', 'Porcentaje de utilidad', 25.00),
+(2, 'Merma', 'Porcentaje de merma', 10.00),
+(3, 'iva', 'Porcentaje de IVA', 16.00),
+(4, 'Suaje', 'Costo del suaje por cm lineal', 4.00);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `vendedores`
 --
 
@@ -332,50 +416,44 @@ CREATE TABLE `ventas` (
   `monto_venta` decimal(9,2) NOT NULL,
   `monto_envio` decimal(8,2) DEFAULT NULL,
   `monto_suaje` decimal(8,2) DEFAULT NULL,
-<<<<<<< HEAD
   `cuenta` varchar(10) NOT NULL,
-  `iva` varchar(1) NOT NULL,
-=======
-  `cuenta` enum('millop','alterna') NOT NULL DEFAULT 'millop',
   `iva` tinyint(1) NOT NULL DEFAULT 1,
->>>>>>> origin/main
   `vendedor` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `ventas`
---
-
-INSERT INTO `ventas` (`id`, `fecha`, `monto_venta`, `monto_envio`, `monto_suaje`, `cuenta`, `iva`, `vendedor`) VALUES
-(1, '2025-07-28', 1000.00, 200.00, 100.00, '', '', 1);
 
 --
 -- Índices para tablas volcadas
 --
 
 --
--- Indices de la tabla `catalogo_productos`
+-- Indices de la tabla `armado_procesos`
 --
-ALTER TABLE `catalogo_productos`
-  ADD PRIMARY KEY (`SKU`);
+ALTER TABLE `armado_procesos`
+  ADD KEY `id_armado` (`id_armado`),
+  ADD KEY `id_proceso` (`id_proceso`);
 
 --
--- Indices de la tabla `material`
+-- Indices de la tabla `procesos`
 --
-ALTER TABLE `material`
+ALTER TABLE `procesos`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indices de la tabla `vendedores`
+-- Indices de la tabla `rangos_suajado`
 --
-ALTER TABLE `vendedores`
+ALTER TABLE `rangos_suajado`
+  ADD KEY `id_proceso` (`id_proceso`);
+
+--
+-- Indices de la tabla `valores`
+--
+ALTER TABLE `valores`
   ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `ventas`
 --
 ALTER TABLE `ventas`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `vendedor` (`vendedor`);
 
 --
@@ -383,22 +461,16 @@ ALTER TABLE `ventas`
 --
 
 --
--- AUTO_INCREMENT de la tabla `material`
+-- AUTO_INCREMENT de la tabla `procesos`
 --
-ALTER TABLE `material`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
+ALTER TABLE `procesos`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT de la tabla `vendedores`
+-- AUTO_INCREMENT de la tabla `valores`
 --
-ALTER TABLE `vendedores`
+ALTER TABLE `valores`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT de la tabla `ventas`
---
-ALTER TABLE `ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
