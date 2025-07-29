@@ -9,6 +9,7 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
     $h = (float)$_GET['alto'];
     $similares = get_cajas_proximas($conn, $l, $a, $h);
 }
+require 'back.php';
 ?>
 <div class="card">
 	<div class="card-body">
@@ -61,12 +62,6 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 			            <?php endforeach; ?>
 			        </select>
 				</div>
-				<div class="col-12 col-lg-1 mb-lg-3">
-					<label for="cantidad">Cantidad</label>
-				</div>
-                                <div class="col-12 col-lg-3 mb-lg-3">
-                                        <input class="form-control" type="number" name="cantidad" placeholder="1000" value="<?php echo isset($_GET['cantidad']) ? htmlspecialchars($_GET['cantidad']) : '' ?>" required>
-                                </div>
                         </div>
 			<div class="row">
 				<div class="col-12 text-center">
@@ -115,6 +110,71 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 				</tbody>
 			</table>
 		</div>
+    </div>
+</div>
+<?php endif; ?>
+
+<?php if ($resultado_cotizacion): ?>
+<div class="card mt-3">
+    <div class="card-header">
+        <h5>Resultado de la cotizaci&oacute;n</h5>
+    </div>
+    <div class="card-body">
+        <?php
+            $idxArm = array_search($armado, array_column($armados, 'id'));
+            $nombreArm = $idxArm !== false ? $armados[$idxArm]['nombre'] : '';
+            $idxMat = array_search($material, array_column($materiales, 'clave'));
+            $descMat = $idxMat !== false ? $materiales[$idxMat]['descripcion'] : $material;
+        ?>
+        <p><strong>Armado:</strong> <?php echo htmlspecialchars($nombreArm); ?></p>
+        <p><strong>Medidas:</strong> <?php echo htmlspecialchars($_GET['largo'] . ' x ' . $_GET['ancho'] . ' x ' . $_GET['alto']) . ' cm'; ?></p>
+        <p><strong>Material:</strong> <?php echo htmlspecialchars($descMat); ?></p>
+        <img src="img/<?php echo $armado; ?>.png" alt="Armado" class="img-fluid mb-3" style="max-width:200px;">
+
+        <h6>Medidas del sustrato</h6>
+        <ul>
+            <?php foreach ($resultado_cotizacion['medidas_sustrato'] as $p): ?>
+                <li><?php echo ($p['nombre'] ? htmlspecialchars($p['nombre']) . ': ' : '') . number_format($p['largo'],2) . ' x ' . number_format($p['ancho'],2) . ' cm'; ?></li>
+            <?php endforeach; ?>
+        </ul>
+        <p><strong>Suaje calculado:</strong> <?php echo number_format($resultado_cotizacion['cm_suaje'],2); ?> cm - $<?php echo number_format($resultado_cotizacion['costo_suaje'],2); ?></p>
+
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>1000</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Precio de la caja sin IVA</td>
+                        <td>$<?php echo number_format($resultado_cotizacion['precio_caja_sin_iva'], 2); ?></td>
+                    </tr>
+                    <tr>
+                        <td>Precio de la caja con IVA</td>
+                        <td>$<?php echo number_format($resultado_cotizacion['precio_caja_con_iva'], 2); ?></td>
+                    </tr>
+                    <tr>
+                        <td>Precio del suaje diluido sin IVA</td>
+                        <td>$<?php echo number_format($resultado_cotizacion['suaje_diluido_sin_iva'], 2); ?></td>
+                    </tr>
+                    <tr>
+                        <td>Precio del suaje diluido con IVA</td>
+                        <td>$<?php echo number_format($resultado_cotizacion['suaje_diluido_con_iva'], 2); ?></td>
+                    </tr>
+                    <tr>
+                        <td>Precio de la caja + suaje diluido sin IVA</td>
+                        <td>$<?php echo number_format($resultado_cotizacion['caja_con_suaje_sin_iva'], 2); ?></td>
+                    </tr>
+                    <tr>
+                        <td>Precio de la caja + suaje diluido con IVA</td>
+                        <td>$<?php echo number_format($resultado_cotizacion['caja_con_suaje_con_iva'], 2); ?></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 <?php endif; ?>
