@@ -2,8 +2,6 @@
 require_once 'funciones.php';
 $armados = get_armados($conn);
 $materiales = get_materiales($conn);
-$procesos  = get_procesos($conn);
-$valores   = get_valores($conn);
 $similares = [];
 if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
     $l = (float)$_GET['largo'];
@@ -19,8 +17,7 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 				<h5>Caja</h5>
 			</div>
 		</div>
-                <form class="form" method="get">
-                        <input type="hidden" name="cotizar" value="1">
+		<form class="form" method="get">
 			<div class="row">
 				<div class="col-12 col-lg-1 mb-lg-3">
 					<label for="largo" class="form-label">Largo</label>
@@ -62,109 +59,21 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 			                    <?php echo htmlspecialchars($m['descripcion']) . " - $" . number_format($m['precio_m2'], 2) . "/m²"; ?>
 			                </option>
 			            <?php endforeach; ?>
-                                </select>
+			        </select>
+				</div>
+				<div class="col-12 col-lg-1 mb-lg-3">
+					<label for="cantidad">Cantidad</label>
+				</div>
+                                <div class="col-12 col-lg-3 mb-lg-3">
+                                        <input class="form-control" type="number" name="cantidad" placeholder="1000" value="<?php echo isset($_GET['cantidad']) ? htmlspecialchars($_GET['cantidad']) : '' ?>" required>
                                 </div>
                         </div>
-                        <div class="row">
-                                <div class="col-12 text-center">
-                                        <button type="submit" class="btn btn-primary me-2">Cotizar</button>
-                                        <button type="button" class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#opciones_avanzadas">Avanzado</button>
-                                </div>
-                        </div>
-                        <div class="collapse mt-3" id="opciones_avanzadas">
-                                <div class="card card-body">
-                                        <div class="row g-3">
-                                                <?php foreach($procesos as $p): ?>
-                                                <div class="col-6 col-lg-3">
-                                                        <label class="form-label" for="proc_<?php echo $p['id']; ?>"><?php echo htmlspecialchars($p['nombre']); ?></label>
-                                                        <input class="form-control" type="number" step="0.01" name="proc_<?php echo $p['id']; ?>" id="proc_<?php echo $p['id']; ?>" value="<?php echo number_format($p['precio'],2,'.',''); ?>">
-                                                </div>
-                                                <?php endforeach; ?>
-                                                <div class="col-6 col-lg-3">
-                                                        <label class="form-label" for="suaje">Suaje cm</label>
-                                                        <input class="form-control" type="number" step="0.01" name="suaje" id="suaje" value="<?php echo number_format($valores['suaje'],2,'.',''); ?>">
-                                                </div>
-                                                <div class="col-6 col-lg-3">
-                                                        <label class="form-label" for="utilidad">Utilidad %</label>
-                                                        <input class="form-control" type="number" step="0.01" name="utilidad" id="utilidad" value="<?php echo number_format($valores['utilidad'],2,'.',''); ?>">
-                                                </div>
-                                                <div class="col-6 col-lg-3">
-                                                        <label class="form-label" for="merma">Merma %</label>
-                                                        <input class="form-control" type="number" step="0.01" name="merma" id="merma" value="<?php echo number_format($valores['merma'],2,'.',''); ?>">
-                                                </div>
-                                        </div>
-                                </div>
-                        </div>
+			<div class="row">
+				<div class="col-12 text-center">
+					<button type="submit" class="btn btn-primary">Cotizar</button>
+				</div>
+			</div>
                 </form>
-                <?php
-                if (isset($_GET['cotizar'])) {
-                        require 'back.php';
-                        if (!empty($resultados)) {
-                ?>
-                <div class="mt-3">
-                        <p><strong>Armado:</strong> <?php echo htmlspecialchars($resultados['resumen']['armado']); ?><br>
-                        <strong>Medidas:</strong> <?php echo htmlspecialchars($resultados['resumen']['medidas']); ?><br>
-                        <strong>Material:</strong> <?php echo htmlspecialchars($resultados['resumen']['material']); ?></p>
-                </div>
-                <div class="table-responsive">
-                        <table class="table table-sm">
-                                <thead>
-                                        <tr>
-                                                <th></th>
-                                                <?php foreach($resultados['tabla'] as $vol => $vals): ?>
-                                                <th><?php echo $vol; ?>k</th>
-                                                <?php endforeach; ?>
-                                        </tr>
-                                </thead>
-                                <tbody>
-                                        <tr>
-                                                <th>Precio caja sin IVA</th>
-                                                <?php foreach($resultados['tabla'] as $vals): ?>
-                                                <td>$<?php echo number_format($vals['caja_sin_iva'],2); ?></td>
-                                                <?php endforeach; ?>
-                                        </tr>
-                                        <tr>
-                                                <th>Precio caja con IVA</th>
-                                                <?php foreach($resultados['tabla'] as $vals): ?>
-                                                <td>$<?php echo number_format($vals['caja_con_iva'],2); ?></td>
-                                                <?php endforeach; ?>
-                                        </tr>
-                                        <tr>
-                                                <th>Suaje diluido sin IVA</th>
-                                                <?php foreach($resultados['tabla'] as $vals): ?>
-                                                <td>$<?php echo number_format($vals['suaje_sin_iva'],2); ?></td>
-                                                <?php endforeach; ?>
-                                        </tr>
-                                        <tr>
-                                                <th>Suaje diluido con IVA</th>
-                                                <?php foreach($resultados['tabla'] as $vals): ?>
-                                                <td>$<?php echo number_format($vals['suaje_con_iva'],2); ?></td>
-                                                <?php endforeach; ?>
-                                        </tr>
-                                        <tr>
-                                                <th>Caja + suaje sin IVA</th>
-                                                <?php foreach($resultados['tabla'] as $vals): ?>
-                                                <td>$<?php echo number_format($vals['total_sin_iva'],2); ?></td>
-                                                <?php endforeach; ?>
-                                        </tr>
-                                        <tr>
-                                                <th>Caja + suaje con IVA</th>
-                                                <?php foreach($resultados['tabla'] as $vals): ?>
-                                                <td>$<?php echo number_format($vals['total_con_iva'],2); ?></td>
-                                                <?php endforeach; ?>
-                                        </tr>
-                                </tbody>
-                        </table>
-                </div>
-                <p class="mt-3 mb-0"><strong>Medidas del sustrato:</strong></p>
-                <ul class="mb-0">
-                        <?php foreach($resultados['sustrato'] as $s): ?>
-                        <li><?php echo htmlspecialchars($s); ?></li>
-                        <?php endforeach; ?>
-                </ul>
-                <p class="mt-2"><strong>Precio del suaje:</strong> $<?php echo number_format($resultados['precio_suaje'],2); ?></p>
-                <?php } }
-                ?>
         </div>
 </div>
 <div class="modal fade" id="armadoModal" tabindex="-1" aria-labelledby="armadoModalLabel" aria-hidden="true">
