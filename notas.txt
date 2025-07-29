@@ -41,17 +41,19 @@ Per - Rallado, ranurado /rallado, ranurado
 Per - Rallado, ranurado, pegado /rallado, ranurado
 
 -----------------------------------------------------------------
+Elimina el input de cantidad del formulario
 
 La cotización de una caja se compone de:
 -Procesos (con sus respectivos costos de la BD o del formulario)
--Sustrato o material (En el caso del corrugado se cobra por metro cuadrado)
--Utilidad
--Suaje
+-Sustrato o material (En el caso del corrugado se cobra por metro cuadrado, tambien en la bd)
+-Utilidad (porcentaje en bd)
+-Suaje (precio por cm en bd)
+-IVA (porcentual en la bd)
 
 Proceso para corrugado:
 -Considerar que en general los costos son para un tiro que es 1000 piezas.
 -Primero se deben obtener las medidas del sustrato usando la función obtener_datos_caja(), esta función usa el largo, ancho, alto y armado de la caja para devolver el tamaño del sustrato.
--Con las medidas del sustrato se calculo el numero de metros necesarios para la producción de las cajas. Tambien debe agregarse a estos metros la merma.
+-Con las medidas del sustrato se calculo el numero de metros necesarios para la producción de las cajas. Tambien debe agregarse a estos metros la merma (se calcula porcentualmente, el procentaje esta en la bd) .
 -Multiplicar los metros por el precio del material seleccionado.
 -La funcion obtener_datos_caja() tambien devuelve los cm necesarios para el suaje, estos cm se multiplicaran por el costo por cm del suaje (por ejemplo 200cm * $4 = $800), con esto se obtiene el precio del suaje.
 -El costo del suajado se determina en función del costo del suaje, para esto debe consultarse la tabla rangos_suajado, que indica el intervalo del precio del suaje y cual sería el precio del suajado que le corresponde.
@@ -79,4 +81,4 @@ Resultados:
 *1000 (costo calculado por millar)
 
 Consideraciones:
--Dejar un botón de "avanzado", que despliegue un collapse con los input para poder modificar los costos de procesos, suaje, utilidad y merma en casos especiales.
+-Agregar un botón de "avanzado" junto al boton de cotizar, que despliegue un collapse con los input para poder modificar los costos de procesos, suaje, utilidad y merma en casos especiales.
