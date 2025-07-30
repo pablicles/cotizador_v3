@@ -33,7 +33,7 @@ function get_materiales(mysqli $conn){
  */
 function get_cajas_proximas(mysqli $conn, float $l, float $w, float $h, int $limit = 5): array
 {
-    $sql = "SELECT Nombre, Largo, Ancho, Alto FROM catalogo_productos";
+    $sql = "SELECT SKU, Nombre, Color, Precio_Unit, Largo, Ancho, Alto FROM catalogo_productos";
     $res = mysqli_query($conn, $sql);
     $cajas = [];
     if ($res) {
