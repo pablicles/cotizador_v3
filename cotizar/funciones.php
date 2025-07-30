@@ -329,16 +329,16 @@ function get_costo_suajado(mysqli $conn, float $precio_suaje): float{
     return 0;
 }
 
-function cotizar_corrugado(mysqli $conn, int $armado, float $largo, float $ancho, float $alto, string $material_clave): array{
+function cotizar_corrugado(mysqli $conn, int $armado, float $largo, float $ancho, float $alto, string $material_clave, array $opciones = []): array{
     $material = get_material_info($conn, $material_clave);
     if(!$material){
         return [];
     }
 
     $datos_caja = obtener_datos_caja($armado, $largo, $ancho, $alto);
-    $merma     = get_valor($conn, 'Merma');
-    $utilidad  = get_valor($conn, 'Utilidad');
-    $iva       = get_valor($conn, 'iva');
+    $merma     = $opciones['merma']     ?? get_valor($conn, 'Merma');
+    $utilidad  = $opciones['utilidad']  ?? get_valor($conn, 'Utilidad');
+    $iva       = $opciones['iva']       ?? get_valor($conn, 'iva');
     $precio_cm = get_valor($conn, 'Suaje');
 
     $area_m2    = 0;
@@ -348,9 +348,13 @@ function cotizar_corrugado(mysqli $conn, int $armado, float $largo, float $ancho
         $area_m2 += ($l * $w) / 10000;
         $cm_suaje += $datos_caja['cm_suaje'][$i];
     }
+    if(isset($opciones['cm_suaje'])){
+        $cm_suaje = (float)$opciones['cm_suaje'];
+    }
     $area_m2_con_merma = $area_m2 * (1 + $merma / 100);
 
-    $costo_material_millar = $area_m2_con_merma * $material['precio_m2'] * 1000;
+    $precio_m2 = $opciones['precio_m2'] ?? $material['precio_m2'];
+    $costo_material_millar = $area_m2_con_merma * $precio_m2 * 1000;
     $precio_suaje = $cm_suaje * $precio_cm;
 
     $procesos = get_procesos_por_armado($conn, $armado);
@@ -362,7 +366,10 @@ function cotizar_corrugado(mysqli $conn, int $armado, float $largo, float $ancho
         }else{
             $costo = $p['precio'];
         }
-        $procesos_detalle[] = ['nombre' => $p['nombre'], 'costo' => $costo];
+        if(isset($opciones['procesos'][$p['id']])){
+            $costo = (float)$opciones['procesos'][$p['id']];
+        }
+        $procesos_detalle[] = ['id' => $p['id'], 'nombre' => $p['nombre'], 'costo' => $costo];
         $costo_procesos_millar += $costo;
     }
 
