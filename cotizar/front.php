@@ -354,9 +354,9 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                 <p><strong>Costo procesos por millar:</strong> $<?php echo number_format($cotizacion['costo_procesos_millar'],2); ?></p>
                 <p><strong>Subtotal:</strong> $<?php echo number_format($cotizacion['base_millar'],2); ?></p>
                 <p><strong>Utilidad (<?php echo $cotizacion['utilidad']; ?>%):</strong> $<?php echo number_format($cotizacion['utilidad_monto'],2); ?></p>
+                <p><strong>Sobrantes (<?php echo $cotizacion['sobrantes']; ?>%):</strong> $<?php echo number_format($cotizacion['sobrantes_monto'],2); ?></p>
                 <p><strong>Costo millar sin IVA:</strong> $<?php echo number_format($cotizacion['costo_millar_sin_iva'],2); ?></p>
                 <?php if($cotizacion['aplica_sobrantes']): ?>
-                <p><strong>Sobrantes (<?php echo $cotizacion['sobrantes']; ?>%):</strong> $<?php echo number_format($cotizacion['sobrantes_monto'],2); ?></p>
                 <?php endif; ?>
                 <p><strong>IVA (<?php echo $cotizacion['iva']; ?>%):</strong> $<?php echo number_format($cotizacion['iva_monto'],2); ?></p>
                 <p><strong>Costo millar con IVA:</strong> $<?php echo number_format($cotizacion['costo_millar_con_iva'],2); ?></p>
