@@ -355,7 +355,11 @@ function cotizar_corrugado(mysqli $conn, int $armado, float $largo, float $ancho
     $area_m2_con_merma = $area_m2 * (1 + $merma / 100);
 
     $precio_m2 = $opciones['precio_m2'] ?? $material['precio_m2'];
-    $costo_material_millar = $area_m2_con_merma * $precio_m2 * 1000;
+    // Incluye el IVA en el costo del sustrato. Esto refleja el costo real del
+    // material adquirido, ya que el proveedor lo cobra con IVA. Posteriormente
+    // se volverá a calcular el IVA de venta para el cliente sobre el total de
+    // la cotización.
+    $costo_material_millar = $area_m2_con_merma * $precio_m2 * (1 + $iva / 100) * 1000;
     $precio_suaje = $cm_suaje * $precio_cm;
 
     $procesos = get_procesos_por_armado($conn, $armado);
