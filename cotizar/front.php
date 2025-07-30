@@ -11,6 +11,7 @@ $procesos_default = get_procesos_por_armado($conn, $selected_armado);
 $merma_def    = get_valor($conn, 'Merma');
 $utilidad_def = get_valor($conn, 'Utilidad');
 $iva_def      = get_valor($conn, 'iva');
+$sobrantes_def = get_valor($conn, 'Sobrantes');
 $chk          = $_GET['chk'] ?? [];
 
 $precio_m2_def = 0;
@@ -43,6 +44,9 @@ if (!empty($chk['utilidad']) && isset($_GET['utilidad'])) {
 }
 if (!empty($chk['iva']) && isset($_GET['iva'])) {
     $iva_def = (float)$_GET['iva'];
+}
+if (!empty($chk['sobrantes']) && isset($_GET['sobrantes'])) {
+    $sobrantes_def = (float)$_GET['sobrantes'];
 }
 
 $procesos_valores = [];
@@ -78,6 +82,9 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
         }
         if (!empty($chk['utilidad'])) {
             $opciones['utilidad'] = $utilidad_def;
+        }
+        if (!empty($chk['sobrantes'])) {
+            $opciones['sobrantes'] = $sobrantes_def;
         }
         if (!empty($chk['iva'])) {
             $opciones['iva'] = $iva_def;
@@ -194,14 +201,22 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 					<label for="utilidad" class="form-label">Utilidad (%)</label>
 					<input class="form-control" type="number" step="0.01" name="utilidad" id="utilidad" value="<?php echo htmlspecialchars($utilidad_def); ?>" data-check-target="chk_utilidad">
 				</div>
-				<div class="col-12 col-lg-3 mb-lg-3">
-					<div class="form-check small">
-						<input class="form-check-input" type="checkbox" id="chk_iva" name="chk[iva]" <?php echo !empty($chk['iva']) ? 'checked' : ''; ?>>
-						<label class="form-check-label" for="chk_iva">Usar</label>
-					</div>
-					<label for="iva" class="form-label">IVA (%)</label>
-					<input class="form-control" type="number" step="0.01" name="iva" id="iva" value="<?php echo htmlspecialchars($iva_def); ?>" data-check-target="chk_iva">
-				</div>
+                                <div class="col-12 col-lg-3 mb-lg-3">
+                                        <div class="form-check small">
+                                                <input class="form-check-input" type="checkbox" id="chk_sobrantes" name="chk[sobrantes]" <?php echo !empty($chk['sobrantes']) ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="chk_sobrantes">Usar</label>
+                                        </div>
+                                        <label for="sobrantes" class="form-label">Sobrantes (%)</label>
+                                        <input class="form-control" type="number" step="0.01" name="sobrantes" id="sobrantes" value="<?php echo htmlspecialchars($sobrantes_def); ?>" data-check-target="chk_sobrantes">
+                                </div>
+                                <div class="col-12 col-lg-3 mb-lg-3">
+                                        <div class="form-check small">
+                                                <input class="form-check-input" type="checkbox" id="chk_iva" name="chk[iva]" <?php echo !empty($chk['iva']) ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="chk_iva">Usar</label>
+                                        </div>
+                                        <label for="iva" class="form-label">IVA (%)</label>
+                                        <input class="form-control" type="number" step="0.01" name="iva" id="iva" value="<?php echo htmlspecialchars($iva_def); ?>" data-check-target="chk_iva">
+                                </div>
 			</div>
 			<div class="row">
 				<div class="col-12 text-right">
@@ -340,6 +355,9 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                 <p><strong>Subtotal:</strong> $<?php echo number_format($cotizacion['base_millar'],2); ?></p>
                 <p><strong>Utilidad (<?php echo $cotizacion['utilidad']; ?>%):</strong> $<?php echo number_format($cotizacion['utilidad_monto'],2); ?></p>
                 <p><strong>Costo millar sin IVA:</strong> $<?php echo number_format($cotizacion['costo_millar_sin_iva'],2); ?></p>
+                <?php if($cotizacion['aplica_sobrantes']): ?>
+                <p><strong>Sobrantes (<?php echo $cotizacion['sobrantes']; ?>%):</strong> $<?php echo number_format($cotizacion['sobrantes_monto'],2); ?></p>
+                <?php endif; ?>
                 <p><strong>IVA (<?php echo $cotizacion['iva']; ?>%):</strong> $<?php echo number_format($cotizacion['iva_monto'],2); ?></p>
                 <p><strong>Costo millar con IVA:</strong> $<?php echo number_format($cotizacion['costo_millar_con_iva'],2); ?></p>
             </div>
