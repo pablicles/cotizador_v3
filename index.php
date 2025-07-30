@@ -83,12 +83,20 @@ if (!isset($_SESSION['usuario_id'])) {
 		            <p>Cotizaciones</p>
 		          </a>
 		        </li>
-		        <li class="nav-item">
-		          <a href="index.php?action=registro_ventas" class="nav-link">
-		            <i class="nav-icon fa-solid fa-cart-shopping"></i>
-		            <p>Ventas</p>
-		          </a>
-		        </li>
+                        <li class="nav-item">
+                          <a href="index.php?action=registro_ventas" class="nav-link">
+                            <i class="nav-icon fa-solid fa-cart-shopping"></i>
+                            <p>Ventas</p>
+                          </a>
+                        </li>
+                        <?php if ($_SESSION['usuario_admin'] === 's'): ?>
+                        <li class="nav-item">
+                          <a href="index.php?action=dashboard" class="nav-link">
+                            <i class="nav-icon fa-solid fa-chart-column"></i>
+                            <p>Dashboard</p>
+                          </a>
+                        </li>
+                        <?php endif; ?>
 		      </ul>
 		    </nav>
 		    <!-- /.sidebar-menu -->
@@ -112,9 +120,13 @@ if (!isset($_SESSION['usuario_id'])) {
 								require 'cotizar/front.php';
 								break;
 
-							case 'registro_ventas':
-								require 'ventas/front.php';
-								break;
+                                                        case 'registro_ventas':
+                                                                require 'ventas/front.php';
+                                                                break;
+
+                                                        case 'dashboard':
+                                                                require 'dashboard/front.php';
+                                                                break;
 
 							case 'ver_tabla':
 								require 'tablas/front.php';
