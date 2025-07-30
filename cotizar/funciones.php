@@ -385,6 +385,9 @@ function cotizar_corrugado(mysqli $conn, int $armado, float $largo, float $ancho
     $iva_monto = $costo_millar_sin_iva * $iva / 100;
     $costo_millar_con_iva = $costo_millar_sin_iva + $iva_monto;
 
+    $precio_pieza_sin_iva = $costo_millar_sin_iva / 1000;
+    $precio_pieza_con_iva = $costo_millar_con_iva / 1000;
+
     return [
         'datos_caja'              => $datos_caja,
         'material'                => $material,
@@ -406,8 +409,8 @@ function cotizar_corrugado(mysqli $conn, int $armado, float $largo, float $ancho
         'iva'                     => $iva,
         'iva_monto'               => $iva_monto,
         'costo_millar_con_iva'    => $costo_millar_con_iva,
-        'precio_pieza_sin_iva'    => $costo_millar_sin_iva / 1000,
-        'precio_pieza_con_iva'    => $costo_millar_con_iva / 1000,
+        'precio_pieza_sin_iva'    => $precio_pieza_sin_iva,
+        'precio_pieza_con_iva'    => $precio_pieza_con_iva,
     ];
 }
 ?>
