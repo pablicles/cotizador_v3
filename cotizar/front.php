@@ -11,6 +11,7 @@ $procesos_default = get_procesos_por_armado($conn, $selected_armado);
 $merma_def    = get_valor($conn, 'Merma');
 $utilidad_def = get_valor($conn, 'Utilidad');
 $iva_def      = get_valor($conn, 'iva');
+$chk          = $_GET['chk'] ?? [];
 
 $precio_m2_def = 0;
 if ($selected_material) {
@@ -28,26 +29,26 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
     }
 }
 
-if (isset($_GET['cm_suaje'])) {
+if (!empty($chk['cm_suaje']) && isset($_GET['cm_suaje'])) {
     $cm_suaje_def = (float)$_GET['cm_suaje'];
 }
-if (isset($_GET['precio_m2'])) {
+if (!empty($chk['precio_m2']) && isset($_GET['precio_m2'])) {
     $precio_m2_def = (float)$_GET['precio_m2'];
 }
-if (isset($_GET['merma'])) {
+if (!empty($chk['merma']) && isset($_GET['merma'])) {
     $merma_def = (float)$_GET['merma'];
 }
-if (isset($_GET['utilidad'])) {
+if (!empty($chk['utilidad']) && isset($_GET['utilidad'])) {
     $utilidad_def = (float)$_GET['utilidad'];
 }
-if (isset($_GET['iva'])) {
+if (!empty($chk['iva']) && isset($_GET['iva'])) {
     $iva_def = (float)$_GET['iva'];
 }
 
 $procesos_valores = [];
 foreach ($procesos_default as $p) {
     $valor = $p['precio'];
-    if (isset($_GET['proceso'][$p['id']])) {
+    if (!empty($chk['procesos'][$p['id']]) && isset($_GET['proceso'][$p['id']])) {
         $valor = (float)$_GET['proceso'][$p['id']];
     }
     $procesos_valores[$p['id']] = $valor;
@@ -65,14 +66,31 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
     $similares = array_slice($tmp_res, 0, $limit);
     $mas       = count($tmp_res) > $limit;
     if ($selected_armado && $selected_material) {
-        $opciones = [
-            'cm_suaje' => $cm_suaje_def,
-            'precio_m2' => $precio_m2_def,
-            'merma' => $merma_def,
-            'utilidad' => $utilidad_def,
-            'iva' => $iva_def,
-            'procesos' => $procesos_valores,
-        ];
+        $opciones = [];
+        if (!empty($chk['cm_suaje'])) {
+            $opciones['cm_suaje'] = $cm_suaje_def;
+        }
+        if (!empty($chk['precio_m2'])) {
+            $opciones['precio_m2'] = $precio_m2_def;
+        }
+        if (!empty($chk['merma'])) {
+            $opciones['merma'] = $merma_def;
+        }
+        if (!empty($chk['utilidad'])) {
+            $opciones['utilidad'] = $utilidad_def;
+        }
+        if (!empty($chk['iva'])) {
+            $opciones['iva'] = $iva_def;
+        }
+        $proc_ops = [];
+        foreach ($procesos_default as $p) {
+            if (!empty($chk['procesos'][$p['id']])) {
+                $proc_ops[$p['id']] = $procesos_valores[$p['id']];
+            }
+        }
+        if ($proc_ops) {
+            $opciones['procesos'] = $proc_ops;
+        }
         $cotizacion = cotizar_corrugado($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
     }
 }
@@ -136,30 +154,54 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                         </div>
                         <div class="row collapse" id="opcionesAvanzadas">
                                 <div class="col-12 col-lg-3 mb-lg-3">
+                                        <div class="form-check small">
+                                            <input class="form-check-input" type="checkbox" id="chk_cm_suaje" name="chk[cm_suaje]" <?php echo !empty($chk['cm_suaje']) ? 'checked' : ''; ?>>
+                                            <label class="form-check-label" for="chk_cm_suaje">Usar</label>
+                                        </div>
                                         <label for="cm_suaje" class="form-label">cm del suaje</label>
-                                        <input class="form-control" type="number" step="0.01" name="cm_suaje" id="cm_suaje" value="<?php echo htmlspecialchars($cm_suaje_def); ?>">
+                                        <input class="form-control" type="number" step="0.01" name="cm_suaje" id="cm_suaje" value="<?php echo htmlspecialchars($cm_suaje_def); ?>" data-check-target="chk_cm_suaje">
                                 </div>
                                 <div class="col-12 col-lg-3 mb-lg-3">
+                                        <div class="form-check small">
+                                            <input class="form-check-input" type="checkbox" id="chk_precio_m2" name="chk[precio_m2]" <?php echo !empty($chk['precio_m2']) ? 'checked' : ''; ?>>
+                                            <label class="form-check-label" for="chk_precio_m2">Usar</label>
+                                        </div>
                                         <label for="precio_m2" class="form-label">Precio sustrato m²</label>
-                                        <input class="form-control" type="number" step="0.01" name="precio_m2" id="precio_m2" value="<?php echo htmlspecialchars($precio_m2_def); ?>">
+                                        <input class="form-control" type="number" step="0.01" name="precio_m2" id="precio_m2" value="<?php echo htmlspecialchars($precio_m2_def); ?>" data-check-target="chk_precio_m2">
                                 </div>
                                 <?php foreach($procesos_default as $proc): ?>
                                 <div class="col-12 col-lg-3 mb-lg-3">
+                                        <div class="form-check small">
+                                            <input class="form-check-input" type="checkbox" id="chk_proc_<?php echo $proc['id']; ?>" name="chk[procesos][<?php echo $proc['id']; ?>]" <?php echo !empty($chk['procesos'][$proc['id']]) ? 'checked' : ''; ?>>
+                                            <label class="form-check-label" for="chk_proc_<?php echo $proc['id']; ?>">Usar</label>
+                                        </div>
                                         <label for="proceso_<?php echo $proc['id']; ?>" class="form-label"><?php echo htmlspecialchars($proc['nombre']); ?></label>
-                                        <input class="form-control" type="number" step="0.01" name="proceso[<?php echo $proc['id']; ?>]" id="proceso_<?php echo $proc['id']; ?>" value="<?php echo htmlspecialchars($procesos_valores[$proc['id']]); ?>">
+                                        <input class="form-control" type="number" step="0.01" name="proceso[<?php echo $proc['id']; ?>]" id="proceso_<?php echo $proc['id']; ?>" value="<?php echo htmlspecialchars($procesos_valores[$proc['id']]); ?>" data-check-target="chk_proc_<?php echo $proc['id']; ?>">
                                 </div>
                                 <?php endforeach; ?>
                                 <div class="col-12 col-lg-3 mb-lg-3">
+                                        <div class="form-check small">
+                                            <input class="form-check-input" type="checkbox" id="chk_merma" name="chk[merma]" <?php echo !empty($chk['merma']) ? 'checked' : ''; ?>>
+                                            <label class="form-check-label" for="chk_merma">Usar</label>
+                                        </div>
                                         <label for="merma" class="form-label">Merma (%)</label>
-                                        <input class="form-control" type="number" step="0.01" name="merma" id="merma" value="<?php echo htmlspecialchars($merma_def); ?>">
+                                        <input class="form-control" type="number" step="0.01" name="merma" id="merma" value="<?php echo htmlspecialchars($merma_def); ?>" data-check-target="chk_merma">
                                 </div>
                                 <div class="col-12 col-lg-3 mb-lg-3">
+                                        <div class="form-check small">
+                                            <input class="form-check-input" type="checkbox" id="chk_utilidad" name="chk[utilidad]" <?php echo !empty($chk['utilidad']) ? 'checked' : ''; ?>>
+                                            <label class="form-check-label" for="chk_utilidad">Usar</label>
+                                        </div>
                                         <label for="utilidad" class="form-label">Utilidad (%)</label>
-                                        <input class="form-control" type="number" step="0.01" name="utilidad" id="utilidad" value="<?php echo htmlspecialchars($utilidad_def); ?>">
+                                        <input class="form-control" type="number" step="0.01" name="utilidad" id="utilidad" value="<?php echo htmlspecialchars($utilidad_def); ?>" data-check-target="chk_utilidad">
                                 </div>
                                 <div class="col-12 col-lg-3 mb-lg-3">
+                                        <div class="form-check small">
+                                            <input class="form-check-input" type="checkbox" id="chk_iva" name="chk[iva]" <?php echo !empty($chk['iva']) ? 'checked' : ''; ?>>
+                                            <label class="form-check-label" for="chk_iva">Usar</label>
+                                        </div>
                                         <label for="iva" class="form-label">IVA (%)</label>
-                                        <input class="form-control" type="number" step="0.01" name="iva" id="iva" value="<?php echo htmlspecialchars($iva_def); ?>">
+                                        <input class="form-control" type="number" step="0.01" name="iva" id="iva" value="<?php echo htmlspecialchars($iva_def); ?>" data-check-target="chk_iva">
                                 </div>
                         </div>
                         <div class="row">
@@ -278,5 +320,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     armadoSelect.addEventListener('change', actualizarImagen);
     actualizarImagen();
+
+    document.querySelectorAll('[data-check-target]').forEach(function(el){
+        el.addEventListener('input', function(){
+            const cb = document.getElementById(el.dataset.checkTarget);
+            if(cb){
+                cb.checked = true;
+            }
+        });
+    });
 });
 </script>
