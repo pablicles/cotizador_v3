@@ -7,9 +7,9 @@
 	$db="cajas_v3";
 
 	/*$server="localhost";
-	$username="u707159538_admin";
-	$password="cmwangG]N6";
-	$db="u707159538_cotizador";*/
+	$username="u707159538_cotizador3";
+	$password="l!A1gg26!]I2";
+	$db="u707159538_cotizador3";*/
 
 	$conn=mysqli_connect($server, $username, $password, $db);
 	if (!$conn) {
