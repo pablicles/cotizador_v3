@@ -339,6 +339,7 @@ function cotizar_corrugado(mysqli $conn, int $armado, float $largo, float $ancho
     $merma     = $opciones['merma']     ?? get_valor($conn, 'Merma');
     $utilidad  = $opciones['utilidad']  ?? get_valor($conn, 'Utilidad');
     $iva       = $opciones['iva']       ?? get_valor($conn, 'iva');
+    $sobrantes = $opciones['sobrantes'] ?? get_valor($conn, 'Sobrantes');
     $precio_cm = get_valor($conn, 'Suaje');
 
     $area_m2    = 0;
@@ -376,6 +377,11 @@ function cotizar_corrugado(mysqli $conn, int $armado, float $largo, float $ancho
     $base_millar = $costo_material_millar + $costo_procesos_millar;
     $utilidad_monto = $base_millar * $utilidad / 100;
     $costo_millar_sin_iva = $base_millar + $utilidad_monto;
+    $sobrantes_monto = 0;
+    if ($cm_suaje == 0) {
+        $sobrantes_monto = $costo_millar_sin_iva * $sobrantes / 100;
+        $costo_millar_sin_iva += $sobrantes_monto;
+    }
     $iva_monto = $costo_millar_sin_iva * $iva / 100;
     $costo_millar_con_iva = $costo_millar_sin_iva + $iva_monto;
 
@@ -394,6 +400,9 @@ function cotizar_corrugado(mysqli $conn, int $armado, float $largo, float $ancho
         'utilidad'                => $utilidad,
         'utilidad_monto'          => $utilidad_monto,
         'costo_millar_sin_iva'    => $costo_millar_sin_iva,
+        'sobrantes'               => $sobrantes,
+        'sobrantes_monto'         => $sobrantes_monto,
+        'aplica_sobrantes'        => $cm_suaje == 0,
         'iva'                     => $iva,
         'iva_monto'               => $iva_monto,
         'costo_millar_con_iva'    => $costo_millar_con_iva,
