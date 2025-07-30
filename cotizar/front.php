@@ -1,7 +1,58 @@
 <?php
 require_once 'funciones.php';
-$armados = get_armados($conn);
+
+$armados    = get_armados($conn);
 $materiales = get_materiales($conn);
+
+$selected_armado   = isset($_GET['armado']) ? (int)$_GET['armado'] : 1;
+$selected_material = $_GET['material'] ?? ($materiales[0]['clave'] ?? '');
+
+$procesos_default = get_procesos_por_armado($conn, $selected_armado);
+$merma_def    = get_valor($conn, 'Merma');
+$utilidad_def = get_valor($conn, 'Utilidad');
+$iva_def      = get_valor($conn, 'iva');
+
+$precio_m2_def = 0;
+if ($selected_material) {
+    $mat_tmp = get_material_info($conn, $selected_material);
+    if ($mat_tmp) {
+        $precio_m2_def = $mat_tmp['precio_m2'];
+    }
+}
+
+$cm_suaje_def = 0;
+if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
+    $datos_tmp = obtener_datos_caja($selected_armado, (float)$_GET['largo'], (float)$_GET['ancho'], (float)$_GET['alto']);
+    foreach ($datos_tmp['cm_suaje'] as $c) {
+        $cm_suaje_def += $c;
+    }
+}
+
+if (isset($_GET['cm_suaje'])) {
+    $cm_suaje_def = (float)$_GET['cm_suaje'];
+}
+if (isset($_GET['precio_m2'])) {
+    $precio_m2_def = (float)$_GET['precio_m2'];
+}
+if (isset($_GET['merma'])) {
+    $merma_def = (float)$_GET['merma'];
+}
+if (isset($_GET['utilidad'])) {
+    $utilidad_def = (float)$_GET['utilidad'];
+}
+if (isset($_GET['iva'])) {
+    $iva_def = (float)$_GET['iva'];
+}
+
+$procesos_valores = [];
+foreach ($procesos_default as $p) {
+    $valor = $p['precio'];
+    if (isset($_GET['proceso'][$p['id']])) {
+        $valor = (float)$_GET['proceso'][$p['id']];
+    }
+    $procesos_valores[$p['id']] = $valor;
+}
+
 $similares = [];
 $cotizacion = [];
 $mas = false;
@@ -13,8 +64,16 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
     $tmp_res   = get_cajas_proximas($conn, $l, $a, $h, $limit + 1);
     $similares = array_slice($tmp_res, 0, $limit);
     $mas       = count($tmp_res) > $limit;
-    if (isset($_GET['armado'], $_GET['material'])) {
-        $cotizacion = cotizar_corrugado($conn, (int)$_GET['armado'], $l, $a, $h, $_GET['material']);
+    if ($selected_armado && $selected_material) {
+        $opciones = [
+            'cm_suaje' => $cm_suaje_def,
+            'precio_m2' => $precio_m2_def,
+            'merma' => $merma_def,
+            'utilidad' => $utilidad_def,
+            'iva' => $iva_def,
+            'procesos' => $procesos_valores,
+        ];
+        $cotizacion = cotizar_corrugado($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
     }
 }
 ?>
@@ -25,8 +84,8 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 				<h5>Caja</h5>
 			</div>
 		</div>
-		<form class="form" method="get">
-			<div class="row">
+                <form class="form" method="get">
+                        <div class="row">
 				<div class="col-12 col-lg-1 mb-lg-3">
 					<label for="largo" class="form-label">Largo</label>
 				</div>
@@ -67,14 +126,47 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 			                    <?php echo htmlspecialchars($m['descripcion']) . " - $" . number_format($m['precio_m2'], 2) . "/m²"; ?>
 			                </option>
 			            <?php endforeach; ?>
-			        </select>
-				</div>
+                                </select>
+                                </div>
                         </div>
-			<div class="row">
-				<div class="col-12 text-center">
-					<button type="submit" class="btn btn-primary">Cotizar</button>
-				</div>
-			</div>
+                        <div class="row mb-2">
+                                <div class="col-12 text-end">
+                                        <a class="link-secondary small" data-bs-toggle="collapse" href="#opcionesAvanzadas" role="button" aria-expanded="false" aria-controls="opcionesAvanzadas">Avanzado</a>
+                                </div>
+                        </div>
+                        <div class="row collapse" id="opcionesAvanzadas">
+                                <div class="col-12 col-lg-3 mb-lg-3">
+                                        <label for="cm_suaje" class="form-label">cm del suaje</label>
+                                        <input class="form-control" type="number" step="0.01" name="cm_suaje" id="cm_suaje" value="<?php echo htmlspecialchars($cm_suaje_def); ?>">
+                                </div>
+                                <div class="col-12 col-lg-3 mb-lg-3">
+                                        <label for="precio_m2" class="form-label">Precio sustrato m²</label>
+                                        <input class="form-control" type="number" step="0.01" name="precio_m2" id="precio_m2" value="<?php echo htmlspecialchars($precio_m2_def); ?>">
+                                </div>
+                                <?php foreach($procesos_default as $proc): ?>
+                                <div class="col-12 col-lg-3 mb-lg-3">
+                                        <label for="proceso_<?php echo $proc['id']; ?>" class="form-label"><?php echo htmlspecialchars($proc['nombre']); ?></label>
+                                        <input class="form-control" type="number" step="0.01" name="proceso[<?php echo $proc['id']; ?>]" id="proceso_<?php echo $proc['id']; ?>" value="<?php echo htmlspecialchars($procesos_valores[$proc['id']]); ?>">
+                                </div>
+                                <?php endforeach; ?>
+                                <div class="col-12 col-lg-3 mb-lg-3">
+                                        <label for="merma" class="form-label">Merma (%)</label>
+                                        <input class="form-control" type="number" step="0.01" name="merma" id="merma" value="<?php echo htmlspecialchars($merma_def); ?>">
+                                </div>
+                                <div class="col-12 col-lg-3 mb-lg-3">
+                                        <label for="utilidad" class="form-label">Utilidad (%)</label>
+                                        <input class="form-control" type="number" step="0.01" name="utilidad" id="utilidad" value="<?php echo htmlspecialchars($utilidad_def); ?>">
+                                </div>
+                                <div class="col-12 col-lg-3 mb-lg-3">
+                                        <label for="iva" class="form-label">IVA (%)</label>
+                                        <input class="form-control" type="number" step="0.01" name="iva" id="iva" value="<?php echo htmlspecialchars($iva_def); ?>">
+                                </div>
+                        </div>
+                        <div class="row">
+                                <div class="col-12 text-center">
+                                        <button type="submit" class="btn btn-primary">Cotizar</button>
+                                </div>
+                        </div>
                 </form>
         </div>
 </div>
