@@ -14,14 +14,15 @@ if (!isset($_SESSION['usuario_id'])) {
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-	<link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css" />
-	<title>Cotizador | Inicio</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css" />
+        <link rel="icon" href="img/logo_cotizador.png">
+        <title>Cotizador | Inicio</title>
 </head>
-<body class="sidebar-mini layout-navbar-fixed sidebar-collapse">
+<body class="sidebar-mini layout-navbar-fixed layout-fixed sidebar-collapse">
 	<div class="wrapper">
 		<!-- Navbar -->
 		<nav class="main-header navbar navbar-expand navbar-white navbar-light">
@@ -57,16 +58,19 @@ if (!isset($_SESSION['usuario_id'])) {
 		<!-- Main Sidebar Container -->
 		<aside class="main-sidebar sidebar-dark-primary elevation-4">
 		  <!-- Brand Logo -->
-		  <a href="index.php" class="brand-link">
-		    <img src="img/logo_millop.png" alt="Millop Logo" class="brand-image"
-		         style="opacity: .8">
-		    <span class="brand-text font-weight-light">Cotizador 3</span>
-		  </a>
+                  <a href="index.php" class="brand-link">
+                    <img src="img/logo_cotizador.png" alt="Cotizador Logo" class="brand-image"
+                         style="opacity: .8">
+                    <span class="brand-text font-weight-light">Cotizador 3</span>
+                  </a>
 
                   <!-- Sidebar -->
                   <div class="sidebar">
                     <!-- Sidebar user panel -->
                     <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                      <div class="image">
+                        <img src="img/perfil/<?php echo $_SESSION['usuario_id']; ?>.png" class="img-circle elevation-2" alt="Usuario">
+                      </div>
                       <div class="info">
                         <a href="#" class="d-block">
                           <?php echo htmlspecialchars($_SESSION['usuario_nombre'] . ' ' . $_SESSION['usuario_apellido']); ?>
