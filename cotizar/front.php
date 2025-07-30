@@ -4,11 +4,15 @@ $armados = get_armados($conn);
 $materiales = get_materiales($conn);
 $similares = [];
 $cotizacion = [];
+$mas = false;
 if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
     $l = (float)$_GET['largo'];
     $a = (float)$_GET['ancho'];
     $h = (float)$_GET['alto'];
-    $similares = get_cajas_proximas($conn, $l, $a, $h);
+    $limit = isset($_GET['limit']) ? max(5, (int)$_GET['limit']) : 5;
+    $tmp_res   = get_cajas_proximas($conn, $l, $a, $h, $limit + 1);
+    $similares = array_slice($tmp_res, 0, $limit);
+    $mas       = count($tmp_res) > $limit;
     if (isset($_GET['armado'], $_GET['material'])) {
         $cotizacion = cotizar_corrugado($conn, (int)$_GET['armado'], $l, $a, $h, $_GET['material']);
     }
@@ -95,25 +99,35 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 		<h5>Cajas similares</h5>
     </div>
     <div class="card-body p-0">
-		<div class="table-responsive">
-			<table class="table table-sm mb-0">
-				<thead>
-					<tr>
-						<th>Nombre</th>
-						<th>Medidas (cm)</th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php foreach($similares as $c): ?>
-						<tr>
-							<td><?php echo htmlspecialchars($c['Nombre']); ?></td>
-							<td><?php echo htmlspecialchars($c['Largo'] . ' x ' . $c['Ancho'] . ' x ' . $c['Alto']); ?></td>
-						</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
-		</div>
+                <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                                <thead>
+                                        <tr>
+                                                <th>SKU</th>
+                                                <th>Nombre</th>
+                                                <th>Color</th>
+                                                <th>Precio</th>
+                                        </tr>
+                                </thead>
+                                <tbody>
+                                        <?php foreach($similares as $c): ?>
+                                                <tr>
+                                                        <td><?php echo htmlspecialchars($c['SKU']); ?></td>
+                                                        <td><?php echo htmlspecialchars($c['Nombre']); ?></td>
+                                                        <td><?php echo htmlspecialchars($c['Color']); ?></td>
+                                                        <td>$<?php echo number_format($c['Precio_Unit'], 2); ?></td>
+                                                </tr>
+                                        <?php endforeach; ?>
+                                </tbody>
+                        </table>
+                </div>
     </div>
+    <?php if ($mas): ?>
+    <div class="card-footer text-center">
+        <?php $link = $_GET; $link['limit'] = $limit + 5; ?>
+        <a href="?<?php echo http_build_query($link); ?>" class="btn btn-sm btn-secondary">Ver más</a>
+    </div>
+    <?php endif; ?>
 </div>
 <?php endif; ?>
 <?php if (!empty($cotizacion)): ?>
