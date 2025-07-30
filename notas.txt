@@ -44,25 +44,41 @@ Per - Rallado, ranurado, pegado /rallado, ranurado
 Elimina el input de cantidad del formulario
 
 La cotización de una caja se compone de:
--Procesos (con sus respectivos costos de la BD o del formulario)
--Sustrato o material (En el caso del corrugado se cobra por metro cuadrado, tambien en la bd)
--Utilidad (porcentaje en bd)
 -Suaje (precio por cm en bd)
+-Sustrato o material (En el caso del corrugado se cobra por metro cuadrado, tambien en la bd)
+-Procesos (con sus respectivos costos de la BD o del formulario)
+-Utilidad (porcentaje en bd)
 -IVA (porcentual en la bd)
 
-Proceso para corrugado:
--Considerar que en general los costos son para un tiro que es 1000 piezas.
--Primero se deben obtener las medidas del sustrato usando la función obtener_datos_caja(), esta función usa el largo, ancho, alto y armado de la caja para devolver el tamaño del sustrato.
--Con las medidas del sustrato se calculo el numero de metros necesarios para la producción de las cajas. Tambien debe agregarse a estos metros la merma (se calcula porcentualmente, el procentaje esta en la bd) .
--Multiplicar los metros por el precio del material seleccionado.
--La funcion obtener_datos_caja() tambien devuelve los cm necesarios para el suaje, estos cm se multiplicaran por el costo por cm del suaje (por ejemplo 200cm * $4 = $800), con esto se obtiene el precio del suaje.
+Proceso para corrugado (materiales tipo metro):
+
+Costo del sustrato:
+-Primero se deben obtener las medidas del sustrato, esto se hace usando la función obtener_datos_caja(), esta función usa el largo, ancho, alto y armado de la caja para devolver las medidas del sustrato en cm cuadrados necesarios para una caja.
+-Convertir el area del sustrato de cm cuadrados a metros cuadrados.
+-A los metros del sustrato agregar el porcentaje de merma (se obtiene de la BD, actualmente 10%)
+-Multiplicar los metros cuadrados del sustrato necesarios por el precio del mismo (se obtiene de la bd de acuerdo al select de material).
+-Multiplicar por 1000, para obtener el costo por millar.
+
+Suaje o troquel:
+-La funcion obtener_datos_caja() tambien devuelve los cm necesarios para el suaje, estos cm se multiplicaran por el costo por cm del suaje (por ejemplo 200cm * $4 = $800), con esto se obtiene el precio del suaje. Este precio es unico y es independiente del volumen de las cajas.
+
+Procesos:
+-Considerar que los costos de procesos (rallado, suajado, ranurado, pegado y empaquetado) son para 1000 piezas.
+-Se deben consultar que procesos corresponden a al armado seleccionado de a cuerdo a la tabla armado_procesos.
 -El costo del suajado se determina en función del costo del suaje, para esto debe consultarse la tabla rangos_suajado, que indica el intervalo del precio del suaje y cual sería el precio del suajado que le corresponde.
--Finalmente se suman los costos de los procesos, los costos del sustrato (metros necesarios para la producción de todas las cajas con merma incluida) y se aumenta la utilidad. Este es el costo por 1000 cajas.
+
+Utilidad e IVA
+-Se suma el costo del sustrato y los procesos. Se aumenta la utilidad (consultar en la BD, actualmente 25%) y el IVA (Consultar en la BD, actualmente 16%).
+-El resultado obtenido de la caja se divide entre 1000 para obtener el precio por pieza.
 
 Resultados:
--Mostrar el resumen de la cotización (armado, medidas, material)
--Mostrar las medidas calculadas del sustrato
--Mostrar el precio calculado del suaje
+Mostrar los resultados en un card, despues de la card de similares.
+-Mostrar el resumen de los parametros de entrada (medidas, material, armado)
+-Mostrar las medidas calculadas para el sustrato
+-Mostrar el precio calculado para el suaje
+-Mostrar el precio de la caja antes de IVA
+-Mostrar el precio de la caja con IVA
+
 
 -Mostrar una tabla con las filas:
 *Precio de la caja sin iva
@@ -82,3 +98,4 @@ Resultados:
 
 Consideraciones:
 -Agregar un botón de "avanzado" junto al boton de cotizar, que despliegue un collapse con los input para poder modificar los costos de procesos, suaje, utilidad y merma en casos especiales.
+
