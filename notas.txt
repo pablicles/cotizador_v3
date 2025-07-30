@@ -80,22 +80,10 @@ Mostrar los resultados en un card, despues de la card de similares.
 -Mostrar el precio de la caja con IVA
 
 
--Mostrar una tabla con las filas:
-*Precio de la caja sin iva
-*Precio de la caja con iva
-*precio del suaje diluido (dividir el precio del suaje entre el numero de cajs) sin iva
-*precio del suaje diluido (dividir el precio del suaje entre el numero de cajs) con iva
-*precio de la caja + suaje diluido sin iva
-*precio de la caja + suaje diluido con iva
--Y las siguientes columnas para los volumenes de cajas
-*1 (Costo calculado por millar *3)
-*25 (Costo calculado por millar *1.3)
-*50 (Costo calculado por millar *1.22)
-*100 (Costo calculado por millar *1.16)
-*200 (Costo calculado por millar *1.11)
-*500 (Costo calculado por millar *1.05)
-*1000 (costo calculado por millar)
-
 Consideraciones:
 -Agregar un botón de "avanzado" junto al boton de cotizar, que despliegue un collapse con los input para poder modificar los costos de procesos, suaje, utilidad y merma en casos especiales.
 
+----------------------------
+Agregar sobrantes a cajas no suajadas
+
+En el modulo de cotizar, solo cuando se cotiza una caja que no necesita suajado, agrega el porcentaje de sobrantes (consultar tabla valores - sobrantes - en la bd) al precio de las cajas. Tambien agrega esta variable a los inputs de modulo "avanzado" y en el detalle de la cotización

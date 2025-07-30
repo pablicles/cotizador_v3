@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 29-07-2025 a las 06:31:58
+-- Tiempo de generación: 30-07-2025 a las 18:38:31
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -462,7 +462,8 @@ INSERT INTO `valores` (`id`, `nombre`, `descripcion`, `precio`) VALUES
 (1, 'Utilidad', 'Porcentaje de utilidad', 25.00),
 (2, 'Merma', 'Porcentaje de merma', 10.00),
 (3, 'iva', 'Porcentaje de IVA', 16.00),
-(4, 'Suaje', 'Costo del suaje por cm lineal', 4.00);
+(4, 'Suaje', 'Costo del suaje por cm lineal', 4.00),
+(5, 'Sobrantes', 'Porcentaje de sobrantes para cajas no suajadas', 10.00);
 
 -- --------------------------------------------------------
 
@@ -556,7 +557,7 @@ ALTER TABLE `procesos`
 -- AUTO_INCREMENT de la tabla `valores`
 --
 ALTER TABLE `valores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
