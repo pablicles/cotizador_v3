@@ -278,8 +278,6 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 	        </strong>
     	</p>
         <p>
-        	Suaje: 
-        	$<?php echo number_format($cotizacion['precio_suaje'],2); ?> |
         	Lamina:
             <?php foreach ($cotizacion['datos_caja']['largo_lamina'] as $i => $ll): ?>
                 <?php
