@@ -130,7 +130,10 @@ if ($stmt) {
                             <?php echo $v['monto_suaje'] !== null ? '$'.number_format($v['monto_suaje'],2) : '-'; ?>
                         </td>
                         <td>
-                            <a href="ventas/eliminar.php?id=<?php echo $v['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar venta?');"><i class="fa fa-trash"></i></a>
+                            <form action="ventas/eliminar.php" method="post" class="d-inline" onsubmit="return confirm('¿Eliminar venta?');">
+                                <input type="hidden" name="id" value="<?php echo $v['id']; ?>">
+                                <button type="submit" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button>
+                            </form>
                         </td>
                     </tr>
                     <?php endforeach; ?>
