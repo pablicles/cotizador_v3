@@ -15,12 +15,14 @@ $sobrantes_def = get_valor($conn, 'Sobrantes');
 $chk          = $_GET['chk'] ?? [];
 
 $precio_m2_def = 0;
+$material_info_sel = [];
 if ($selected_material) {
-    $mat_tmp = get_material_info($conn, $selected_material);
-    if ($mat_tmp) {
-        $precio_m2_def = $mat_tmp['precio_m2'];
+    $material_info_sel = get_material_info($conn, $selected_material);
+    if ($material_info_sel) {
+        $precio_m2_def = $material_info_sel['precio_m2'];
     }
 }
+$material_tipo_sel = $material_info_sel['tipo'] ?? '';
 
 $cm_suaje_def = 0;
 if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
@@ -98,7 +100,11 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
         if ($proc_ops) {
             $opciones['procesos'] = $proc_ops;
         }
-        $cotizacion = cotizar_corrugado($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
+        if ($material_tipo_sel === 'lamina') {
+            $cotizacion = cotizar_lamina($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
+        } else {
+            $cotizacion = cotizar_corrugado($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
+        }
     }
 }
 ?>
@@ -293,7 +299,7 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 	        </strong>
     	</p>
         <p>
-        	Lamina:
+                Lamina:
             <?php foreach ($cotizacion['datos_caja']['largo_lamina'] as $i => $ll): ?>
                 <?php
                     $nombre = $cotizacion['datos_caja']['nombre'][$i] ?? 'Parte '.($i+1);
@@ -302,11 +308,14 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                 ?>
             <?php endforeach; ?>
         </p>
+        <p><strong>Suaje:</strong> $<?php echo number_format($cotizacion['precio_suaje'],2); ?></p>
+        <p><strong>Precio por pieza sin IVA:</strong> $<?php echo number_format($cotizacion['precio_pieza_sin_iva'],2); ?></p>
+        <p><strong>Precio por pieza con IVA:</strong> $<?php echo number_format($cotizacion['precio_pieza_con_iva'],2); ?></p>
         <table class="table table-bordered table-striped">
-        	<tr>
-        		<th>IVA</th>
-        		<th>Suaje</th>
-        		<th>1</th>
+                <tr>
+                        <th>IVA</th>
+                        <th>Suaje</th>
+                        <th>1</th>
         		<th>25</th>
         		<th>50</th>
         		<th>100</th>
@@ -341,9 +350,24 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
     <div class="card-footer">   
         <div class="collapse mt-3" id="desglose">
             <div class="card card-body">
-                <p><strong>Área de sustrato:</strong> <?php echo number_format($cotizacion['area_m2'],4); ?> m²</p>
-                <p><strong>Merma:</strong> <?php echo $cotizacion['merma']; ?>% (<?php echo number_format($cotizacion['area_m2_con_merma'] - $cotizacion['area_m2'],4); ?> m²)</p>
-                <p><strong>Área con merma:</strong> <?php echo number_format($cotizacion['area_m2_con_merma'],4); ?> m²</p>
+                <?php if($cotizacion['material']['tipo'] === 'lamina'): ?>
+                    <p><strong>Merma:</strong> <?php echo $cotizacion['merma']; ?>%</p>
+                    <?php foreach($cotizacion['laminas'] as $lam): ?>
+                        <p><strong><?php echo htmlspecialchars($lam['nombre']); ?></strong></p>
+                        <ul>
+                            <li>Tamaño compra: <?php echo $lam['tam_largo']; ?> x <?php echo $lam['tam_ancho']; ?> cm</li>
+                            <li>Provechos por tamaño: <?php echo $lam['provechos']; ?></li>
+                            <li>Tamaños necesarios: <?php echo $lam['laminas_necesarias']; ?></li>
+                            <li>Tamaños con merma: <?php echo $lam['laminas_merma']; ?></li>
+                            <li>Precio tamaño compra con IVA: $<?php echo number_format($lam['precio_unit_iva'],2); ?></li>
+                            <li>Costo sustrato: $<?php echo number_format($lam['costo'],2); ?></li>
+                        </ul>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p><strong>Área de sustrato:</strong> <?php echo number_format($cotizacion['area_m2'],4); ?> m²</p>
+                    <p><strong>Merma:</strong> <?php echo $cotizacion['merma']; ?>% (<?php echo number_format($cotizacion['area_m2_con_merma'] - $cotizacion['area_m2'],4); ?> m²)</p>
+                    <p><strong>Área con merma:</strong> <?php echo number_format($cotizacion['area_m2_con_merma'],4); ?> m²</p>
+                <?php endif; ?>
                 <p><strong>Costo material por millar:</strong> $<?php echo number_format($cotizacion['costo_material_millar'],2); ?></p>
                 <p><strong>Procesos:</strong></p>
                 <ul>
@@ -356,8 +380,6 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                 <p><strong>Utilidad (<?php echo $cotizacion['utilidad']; ?>%):</strong> $<?php echo number_format($cotizacion['utilidad_monto'],2); ?></p>
                 <p><strong>Sobrantes (<?php echo $cotizacion['sobrantes']; ?>%):</strong> $<?php echo number_format($cotizacion['sobrantes_monto'],2); ?></p>
                 <p><strong>Costo millar sin IVA:</strong> $<?php echo number_format($cotizacion['costo_millar_sin_iva'],2); ?></p>
-                <?php if($cotizacion['aplica_sobrantes']): ?>
-                <?php endif; ?>
                 <p><strong>IVA (<?php echo $cotizacion['iva']; ?>%):</strong> $<?php echo number_format($cotizacion['iva_monto'],2); ?></p>
                 <p><strong>Costo millar con IVA:</strong> $<?php echo number_format($cotizacion['costo_millar_con_iva'],2); ?></p>
             </div>
