@@ -3,19 +3,6 @@
 
 $vendedor_id = $_SESSION['usuario_id'] ?? 0;
 
-// Eliminar registro
-if (isset($_GET['eliminar'])) {
-    $id_eliminar = (int)$_GET['eliminar'];
-    $stmt = mysqli_prepare($conn, "DELETE FROM ventas WHERE id=? AND vendedor=?");
-    if ($stmt) {
-        mysqli_stmt_bind_param($stmt, 'ii', $id_eliminar, $vendedor_id);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_close($stmt);
-    }
-    header('Location: index.php?action=registro_ventas');
-    exit;
-}
-
 // Procesar envio del formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fecha = $_POST['fecha'] ?? date('Y-m-d');
@@ -143,7 +130,7 @@ if ($stmt) {
                             <?php echo $v['monto_suaje'] !== null ? '$'.number_format($v['monto_suaje'],2) : '-'; ?>
                         </td>
                         <td>
-                            <a href="index.php?action=registro_ventas&eliminar=<?php echo $v['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar venta?');"><i class="fa fa-trash"></i></a>
+                            <a href="ventas/eliminar.php?id=<?php echo $v['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar venta?');"><i class="fa fa-trash"></i></a>
                         </td>
                     </tr>
                     <?php endforeach; ?>
