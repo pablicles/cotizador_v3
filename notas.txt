@@ -42,7 +42,7 @@ Per - Rallado, ranurado, pegado /rallado, ranurado
 
 -----------------------------------------------------------------
 Elimina el input de cantidad del formulario
-
+-----------------------------------------------------------------
 La cotización de una caja se compone de:
 -Suaje (precio por cm en bd)
 -Sustrato o material (En el caso del corrugado se cobra por metro cuadrado, tambien en la bd)
@@ -83,7 +83,47 @@ Mostrar los resultados en un card, despues de la card de similares.
 Consideraciones:
 -Agregar un botón de "avanzado" junto al boton de cotizar, que despliegue un collapse con los input para poder modificar los costos de procesos, suaje, utilidad y merma en casos especiales.
 
-----------------------------
+-----------------------------------------------------------------
 Agregar sobrantes a cajas no suajadas
 
 En el modulo de cotizar, solo cuando se cotiza una caja que no necesita suajado, agrega el porcentaje de sobrantes (consultar tabla valores - sobrantes - en la bd) al precio de las cajas. Tambien agrega esta variable a los inputs de modulo "avanzado" y en el detalle de la cotización
+
+-----------------------------------------------------------------
+Proceso para materiales tipo lamina:
+
+Los materiales tipo lamina se cotizan de manera similar a los tipo metro, con la diferencia de que aqui el sustrato se adquiere por laminas. El objetivo es aprovechar al máximo cada lamina, pero los sobrantes de la lamina también se cobran.
+
+Costo del sustrato:
+-Primero se deben obtener las medidas del sustrato necesarias para una pieza, esto se hace usando la función obtener_datos_caja(), esta función usa el largo, ancho, alto y armado de la caja para devolver las medidas del sustrato en cm cuadrados necesarios para una caja. Llamaremos a estas medidas "provecho".
+-Despues debemos consultar la lista de laminas disponibles en el material seleccionado. Por ejemplo, si el usuario seleccionó cartulina sulfatada de 14 puntos, debemos obtener todas las medidas (largo y ancho) disponibles para ese material. A esta lista de laminas con sus medidas las llamaremos "tamaños compra". Considerar que las medidas de la lamina en la BD estan en cm.
+-Debemos hacer todas las combinaciones posibles, acomodando los provechos de manera vertical y horizontal en todos los tamaños compra. El objetivo es colocar el mayor numero de provechos posibles en cada tamaño compra.
+-Considerar que el precio del tamaño compra de los materiales tipo lamina en la BD es por un millar de piezas. Así que debemos dividirlo entre 1000 (ej, $10,000/1000= $10)
+-Despues, dividiremos el precio del tamaño compra entre el numero de provechos (por ejemplo si el tamaño compra tiene un precio de $10 entre 5 provechos, es igual a $2 por provecho). Utilizaremos el tamaño compra que obtenga el precio más bajo por provecho.
+-Ahora que sabemos que tamaño compra utilizaremos y cuantos provechos salen de cada uno, obtendremos el numero de tamaños compra necesarios para producir 1000 cajas (por ejemplo, con 5 provechos por tamaño compra necesitariamos 1000/5=200 tamaños compra).
+-Se debe agregar el porcentaje de merma correspondiente de la bd o del input del usuario (ej, 200*10%=220 tamaños compra).
+-Agregar el costo del IVA al precio del tamaño compra seleccionado (ej, $10+16%=$11.60)
+-Multiplicar el numero de tamaños compra por el precio del mismo para obtener el precio total del sustrato (ej 220*$11.60=$2,552).
+
+El suaje, los procesos, la utilidad y el IVA se calculan igual que en el corrugado. A continuación se repiten las instrucciones:
+
+Suaje o troquel:
+-La funcion obtener_datos_caja() tambien devuelve los cm necesarios para el suaje, estos cm se multiplicaran por el costo por cm del suaje (por ejemplo 200cm * $4 = $800), con esto se obtiene el precio del suaje. Este precio es unico y es independiente del volumen de las cajas.
+
+Procesos:
+-Considerar que los costos de procesos (rallado, suajado, ranurado, pegado y empaquetado) son para 1000 piezas.
+-Se deben consultar que procesos corresponden a al armado seleccionado de a cuerdo a la tabla armado_procesos.
+-El costo del suajado se determina en función del costo del suaje, para esto debe consultarse la tabla rangos_suajado, que indica el intervalo del precio del suaje y cual sería el precio del suajado que le corresponde.
+
+Utilidad e IVA
+-Se suma el costo del sustrato y los procesos. Se aumenta la utilidad (consultar en la BD, actualmente 25%) y el IVA (Consultar en la BD, actualmente 16%).
+-El resultado obtenido de la caja se divide entre 1000 para obtener el precio por pieza.
+
+Resultados:
+Mostrar los resultados en la card que esta despues de la card de similares.
+-Mostrar el resumen de los parametros de entrada (medidas, material, armado)
+-Mostrar el precio calculado para el suaje
+-Mostrar el precio de la caja antes de IVA
+-Mostrar el precio de la caja con IVA
+
+Consideraciones
+-En el botón "ver más" mostrar todos los parametros que se usaron en la cotización (como tamaño compra, numero de tamaños compra, provechos, etc.)
