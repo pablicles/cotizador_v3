@@ -270,7 +270,10 @@ function get_valor(mysqli $conn, string $nombre){
 }
 
 function get_material_info(mysqli $conn, string $clave): array{
-    $sql = "SELECT tipo, descripcion, MIN(CASE WHEN tipo='lamina' THEN precio * 10 /(largo_max * ancho_max) ELSE precio END) AS precio_m2
+    $sql = "SELECT tipo, descripcion,
+                    MAX(largo_max) AS largo_max,
+                    MAX(ancho_max) AS ancho_max,
+                    MIN(CASE WHEN tipo='lamina' THEN precio * 10 /(largo_max * ancho_max) ELSE precio END) AS precio_m2
             FROM material WHERE clave=? GROUP BY clave, tipo, descripcion LIMIT 1";
     $stmt = mysqli_prepare($conn, $sql);
     if(!$stmt){
@@ -364,8 +367,13 @@ function cotizar_corrugado(mysqli $conn, int $armado, float $largo, float $ancho
 
     $area_m2    = 0;
     $cm_suaje   = 0;
+    $largo_max  = $material['largo_max'] ?? 0;
+    $ancho_max  = $material['ancho_max'] ?? 0;
     foreach($datos_caja['largo_lamina'] as $i => $l){
         $w = $datos_caja['ancho_lamina'][$i];
+        if(!(($l <= $largo_max && $w <= $ancho_max) || ($w <= $largo_max && $l <= $ancho_max))){
+            return [];
+        }
         $area_m2 += ($l * $w) / 10000;
         $cm_suaje += $datos_caja['cm_suaje'][$i];
     }
