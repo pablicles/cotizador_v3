@@ -24,10 +24,11 @@ if ($selected_material) {
 }
 $material_tipo_sel = $material_info_sel['tipo'] ?? '';
 
-$cm_suaje_def = 0;
+$cm_suaje_def   = 0;
+$datos_caja_tmp = [];
 if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
-    $datos_tmp = obtener_datos_caja($selected_armado, (float)$_GET['largo'], (float)$_GET['ancho'], (float)$_GET['alto']);
-    foreach ($datos_tmp['cm_suaje'] as $c) {
+    $datos_caja_tmp = obtener_datos_caja($selected_armado, (float)$_GET['largo'], (float)$_GET['ancho'], (float)$_GET['alto']);
+    foreach ($datos_caja_tmp['cm_suaje'] as $c) {
         $cm_suaje_def += $c;
     }
 }
@@ -60,9 +61,10 @@ foreach ($procesos_default as $p) {
     $procesos_valores[$p['id']] = $valor;
 }
 
-$similares = [];
-$cotizacion = [];
-$mas = false;
+$similares      = [];
+$cotizacion     = [];
+$mas            = false;
+$error_medidas  = false;
 if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
     $l = (float)$_GET['largo'];
     $a = (float)$_GET['ancho'];
@@ -72,38 +74,49 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
     $similares = array_slice($tmp_res, 0, $limit);
     $mas       = count($tmp_res) > $limit;
     if ($selected_armado && $selected_material) {
-        $opciones = [];
-        if (!empty($chk['cm_suaje'])) {
-            $opciones['cm_suaje'] = $cm_suaje_def;
-        }
-        if (!empty($chk['precio_m2'])) {
-            $opciones['precio_m2'] = $precio_m2_def;
-        }
-        if (!empty($chk['merma'])) {
-            $opciones['merma'] = $merma_def;
-        }
-        if (!empty($chk['utilidad'])) {
-            $opciones['utilidad'] = $utilidad_def;
-        }
-        if (!empty($chk['sobrantes'])) {
-            $opciones['sobrantes'] = $sobrantes_def;
-        }
-        if (!empty($chk['iva'])) {
-            $opciones['iva'] = $iva_def;
-        }
-        $proc_ops = [];
-        foreach ($procesos_default as $p) {
-            if (!empty($chk['procesos'][$p['id']])) {
-                $proc_ops[$p['id']] = $procesos_valores[$p['id']];
+        $largo_max = $material_info_sel['largo_max'] ?? 0;
+        $ancho_max = $material_info_sel['ancho_max'] ?? 0;
+        foreach ($datos_caja_tmp['largo_lamina'] as $i => $ll) {
+            $al = $datos_caja_tmp['ancho_lamina'][$i];
+            if (!(($ll <= $largo_max && $al <= $ancho_max) || ($al <= $largo_max && $ll <= $ancho_max))) {
+                $error_medidas = true;
+                break;
             }
         }
-        if ($proc_ops) {
-            $opciones['procesos'] = $proc_ops;
-        }
-        if ($material_tipo_sel === 'lamina') {
-            $cotizacion = cotizar_lamina($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
-        } else {
-            $cotizacion = cotizar_corrugado($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
+        if (!$error_medidas) {
+            $opciones = [];
+            if (!empty($chk['cm_suaje'])) {
+                $opciones['cm_suaje'] = $cm_suaje_def;
+            }
+            if (!empty($chk['precio_m2'])) {
+                $opciones['precio_m2'] = $precio_m2_def;
+            }
+            if (!empty($chk['merma'])) {
+                $opciones['merma'] = $merma_def;
+            }
+            if (!empty($chk['utilidad'])) {
+                $opciones['utilidad'] = $utilidad_def;
+            }
+            if (!empty($chk['sobrantes'])) {
+                $opciones['sobrantes'] = $sobrantes_def;
+            }
+            if (!empty($chk['iva'])) {
+                $opciones['iva'] = $iva_def;
+            }
+            $proc_ops = [];
+            foreach ($procesos_default as $p) {
+                if (!empty($chk['procesos'][$p['id']])) {
+                    $proc_ops[$p['id']] = $procesos_valores[$p['id']];
+                }
+            }
+            if ($proc_ops) {
+                $opciones['procesos'] = $proc_ops;
+            }
+            if ($material_tipo_sel === 'lamina') {
+                $cotizacion = cotizar_lamina($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
+            } else {
+                $cotizacion = cotizar_corrugado($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
+            }
         }
     }
 }
@@ -347,7 +360,7 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
         	</tr>
         </table>
     </div>
-    <div class="card-footer">   
+    <div class="card-footer">
         <div class="collapse mt-3" id="desglose">
             <div class="card card-body">
                 <?php if($cotizacion['material']['tipo'] === 'lamina'): ?>
@@ -387,6 +400,8 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
         <button class="btn btn-sm btn-secondary float-right" type="button" data-bs-toggle="collapse" data-bs-target="#desglose" aria-expanded="false" aria-controls="desglose">Detalles</button>
     </div>
 </div>
+<?php elseif ($error_medidas && isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])): ?>
+<div class="alert alert-danger mt-3">Las medidas calculadas del sustrato exceden el tamaño máximo del material seleccionado.</div>
 <?php endif; ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
