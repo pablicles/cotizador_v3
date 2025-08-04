@@ -6,6 +6,7 @@ $materiales = get_materiales($conn);
 
 $selected_armado   = isset($_GET['armado']) ? (int)$_GET['armado'] : 1;
 $selected_material = $_GET['material'] ?? ($materiales[0]['clave'] ?? '');
+$tipo_precio = $_GET['tipo_precio'] ?? 'caja_suaje';
 
 $procesos_default = get_procesos_por_armado($conn, $selected_armado);
 $merma_def    = get_valor($conn, 'Merma');
@@ -119,6 +120,9 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                 $cotizacion = cotizar_corrugado($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
             }
             if ($cotizacion) {
+                if ($tipo_precio === 'caja') {
+                    $opciones['solo_caja'] = true;
+                }
                 $tabla_volumenes = cotizar_suaje_multiple($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
             }
         }
@@ -166,21 +170,34 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 				<div class="col-12 col-lg-1 mb-lg-3">
 					<label for="material">Material</label>
 				</div>
-				<div class="col-12 col-lg-3 mb-lg-3">
-					<select class="form-control" name="material" id="material">
-						<?php foreach($materiales as $m): ?>
-							<option value="<?php echo $m['clave']; ?>" <?php echo ($m['clave'] == $selected_material) ? 'selected' : ''; ?>>
-								<?php echo htmlspecialchars($m['descripcion']) . " - $" . number_format($m['precio_m2'], 2) . "/m²"; ?>
-							</option>
-						<?php endforeach; ?>
-					</select>
-				</div>
-			</div>
-			<div class="row mb-2">
-				<div class="col-12 text-end">
-					<a class="link-secondary small" data-bs-toggle="collapse" href="#opcionesAvanzadas" role="button" aria-expanded="false" aria-controls="opcionesAvanzadas">Avanzado</a>
-				</div>
-			</div>
+                                <div class="col-12 col-lg-3 mb-lg-3">
+                                        <select class="form-control" name="material" id="material">
+                                                <?php foreach($materiales as $m): ?>
+                                                        <option value="<?php echo $m['clave']; ?>" <?php echo ($m['clave'] == $selected_material) ? 'selected' : ''; ?>>
+                                                                <?php echo htmlspecialchars($m['descripcion']) . " - $" . number_format($m['precio_m2'], 2) . "/m²"; ?>
+                                                        </option>
+                                                <?php endforeach; ?>
+                                        </select>
+                                </div>
+                        </div>
+                        <div class="row mb-2">
+                                <div class="col-12 col-lg-6 mb-lg-3">
+                                        <label class="form-label">Minimizar costo de:</label>
+                                        <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tipo_precio" id="precio_caja_suaje" value="caja_suaje" <?php echo ($tipo_precio === 'caja_suaje') ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="precio_caja_suaje">Mejor precio caja+suaje</label>
+                                        </div>
+                                        <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tipo_precio" id="precio_caja" value="caja" <?php echo ($tipo_precio === 'caja') ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="precio_caja">Mejor precio caja</label>
+                                        </div>
+                                </div>
+                        </div>
+                        <div class="row mb-2">
+                                <div class="col-12 text-end">
+                                        <a class="link-secondary small" data-bs-toggle="collapse" href="#opcionesAvanzadas" role="button" aria-expanded="false" aria-controls="opcionesAvanzadas">Avanzado</a>
+                                </div>
+                        </div>
 			<div class="row collapse" id="opcionesAvanzadas">
 				<div class="col-12 col-lg-3 mb-lg-3">
 					<div class="form-check small">
@@ -411,6 +428,7 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                     <th><?php echo number_format($vol); ?></th>
                 <?php endforeach; ?>
             </tr>
+            <?php if($tipo_precio === 'caja_suaje'): ?>
             <tr>
                 <td>Precio caja s/ IVA</td>
                 <?php foreach($tabla_volumenes as $info): ?>
@@ -435,6 +453,32 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                     <td>$<?php echo number_format($info['precio_total_con_iva'],2); ?></td>
                 <?php endforeach; ?>
             </tr>
+            <?php else: ?>
+            <tr>
+                <td>Precio caja s/ IVA</td>
+                <?php foreach($tabla_volumenes as $info): ?>
+                    <td>$<?php echo number_format($info['precio_caja_sin_iva'],2); ?></td>
+                <?php endforeach; ?>
+            </tr>
+            <tr>
+                <td>Precio caja c/ IVA</td>
+                <?php foreach($tabla_volumenes as $info): ?>
+                    <td>$<?php echo number_format($info['precio_total_con_iva'],2); ?></td>
+                <?php endforeach; ?>
+            </tr>
+            <tr>
+                <td>Suaje s/ IVA</td>
+                <?php foreach($tabla_volumenes as $info): ?>
+                    <td>$<?php echo number_format($info['precio_suaje_total'],2); ?></td>
+                <?php endforeach; ?>
+            </tr>
+            <tr>
+                <td>Suaje c/ IVA</td>
+                <?php foreach($tabla_volumenes as $info): ?>
+                    <td>$<?php echo number_format($info['precio_suaje_total']*(1+$cotizacion['iva']/100),2); ?></td>
+                <?php endforeach; ?>
+            </tr>
+            <?php endif; ?>
             <tr>
                 <td>Detalles</td>
                 <?php foreach($tabla_volumenes as $vol => $info): ?>
@@ -448,6 +492,7 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                 <p><strong>Piezas por golpe:</strong> <?php echo $info['piezas_por_golpe']; ?></p>
                 <p><strong>Golpes necesarios:</strong> <?php echo $info['golpes']; ?></p>
                 <p><strong>cm de suaje:</strong> <?php echo number_format($info['cm_suaje_total'],2); ?> cm</p>
+                <p><strong>Costo suaje:</strong> $<?php echo number_format($info['precio_suaje_total'],2); ?></p>
                 <p><strong>Costo material:</strong> $<?php echo number_format($info['costo_material_total'],2); ?></p>
                 <p><strong>Costo procesos sin suajado:</strong> $<?php echo number_format($info['costo_procesos_total'],2); ?></p>
                 <p><strong>Costo suajado:</strong> $<?php echo number_format($info['costo_suajado_total'],2); ?></p>

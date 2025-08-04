@@ -624,6 +624,7 @@ function cotizar_suaje_multiple(mysqli $conn, int $armado, float $largo, float $
     foreach($datos_caja['cm_suaje'] as $c){
         $cm_base += $c;
     }
+    $solo_caja = !empty($opciones['solo_caja']);
     $volumenes = [1000,2000,3000,4000,5000,10000];
     $resultados = [];
     foreach($volumenes as $vol){
@@ -664,10 +665,11 @@ function cotizar_suaje_multiple(mysqli $conn, int $armado, float $largo, float $
             $iva = $cot['iva'];
             $costo_total_sin_iva = $base_total * (1 + $utilidad/100);
             $precio_caja_sin_iva = $costo_total_sin_iva / $vol;
-            $precio_suaje_pieza = $precio_suaje / $vol;
+            $precio_suaje_pieza = $solo_caja ? 0 : $precio_suaje / $vol;
             $precio_total_sin_iva = $precio_caja_sin_iva + $precio_suaje_pieza;
             $precio_total_con_iva = $precio_total_sin_iva * (1 + $iva/100);
-            if($mejor === null || $precio_total_sin_iva < $mejor['precio_total_sin_iva']){
+            $criterio = $solo_caja ? $precio_caja_sin_iva : $precio_total_sin_iva;
+            if($mejor === null || $criterio < $mejor['criterio']){
                 $mejor = [
                     'piezas_por_golpe' => $m,
                     'cm_suaje_total' => $cm_total,
@@ -679,10 +681,13 @@ function cotizar_suaje_multiple(mysqli $conn, int $armado, float $largo, float $
                     'precio_suaje_pieza' => $precio_suaje_pieza,
                     'precio_total_sin_iva' => $precio_total_sin_iva,
                     'precio_total_con_iva' => $precio_total_con_iva,
+                    'precio_suaje_total' => $precio_suaje,
+                    'criterio' => $criterio,
                 ];
             }
         }
         if($mejor){
+            unset($mejor['criterio']);
             $resultados[$vol] = $mejor;
         }
     }
