@@ -325,13 +325,10 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                 ?>
             <?php endforeach; ?>
         </p>
-        <p><strong>Suaje:</strong> $<?php echo number_format($cotizacion['precio_suaje'],2); ?></p>
-        <p><strong>Precio por pieza sin IVA:</strong> $<?php echo number_format($cotizacion['precio_pieza_sin_iva'],2); ?></p>
-        <p><strong>Precio por pieza con IVA:</strong> $<?php echo number_format($cotizacion['precio_pieza_con_iva'],2); ?></p>
-        <table class="table table-bordered table-striped">
+        <table class="table table-bordered table-hover">
                 <tr>
                         <th>IVA</th>
-                        <th>Suaje</th>
+                        <th>Desarrollo</th>
                         <th>1</th>
                         <th>25</th>
                         <th>50</th>
@@ -364,7 +361,7 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                 </tr>
         </table>
         <div class="mt-2">
-            <button class="btn btn-sm btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#desglose" aria-expanded="false" aria-controls="desglose">Detalles</button>
+            <button class="btn btn-sm btn-secondary float-right" type="button" data-bs-toggle="collapse" data-bs-target="#desglose" aria-expanded="false" aria-controls="desglose">Detalles</button>
         </div>
         <div class="collapse mt-2" id="desglose">
             <div class="card card-body">
@@ -404,7 +401,7 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
         </div>
         <?php if($tabla_volumenes): ?>
         <hr class="my-4">
-        <table class="table table-bordered table-striped">
+        <table class="table table-bordered table-hover">
             <tr>
                 <th></th>
                 <?php foreach($tabla_volumenes as $vol => $info): ?>
@@ -412,25 +409,25 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                 <?php endforeach; ?>
             </tr>
             <tr>
-                <td>Precio caja s/ IVA</td>
+                <td>Precio caja sin IVA</td>
                 <?php foreach($tabla_volumenes as $info): ?>
                     <td>$<?php echo number_format($info['precio_caja_sin_iva'],2); ?></td>
                 <?php endforeach; ?>
             </tr>
             <tr>
-                <td>Suaje por pieza s/ IVA</td>
+                <td>Desarrollo por pieza sin IVA</td>
                 <?php foreach($tabla_volumenes as $info): ?>
                     <td>$<?php echo number_format($info['precio_suaje_pieza'],2); ?></td>
                 <?php endforeach; ?>
             </tr>
             <tr>
-                <td>Caja + suaje s/ IVA</td>
+                <td>Caja + desarrollo sin IVA</td>
                 <?php foreach($tabla_volumenes as $info): ?>
                     <td>$<?php echo number_format($info['precio_total_sin_iva'],2); ?></td>
                 <?php endforeach; ?>
             </tr>
             <tr>
-                <td>Caja + suaje c/ IVA</td>
+                <td>Caja + desarrollo con IVA</td>
                 <?php foreach($tabla_volumenes as $info): ?>
                     <td>$<?php echo number_format($info['precio_total_con_iva'],2); ?></td>
                 <?php endforeach; ?>
