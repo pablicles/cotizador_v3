@@ -332,6 +332,21 @@ function get_costo_suajado(mysqli $conn, float $precio_suaje): float{
     return 0;
 }
 
+function get_suajado_limits(mysqli $conn): array{
+    $sql = "SELECT largo_max, ancho_max FROM procesos WHERE nombre='suajado' LIMIT 1";
+    $res = mysqli_query($conn, $sql);
+    if($res){
+        $row = mysqli_fetch_assoc($res);
+        if($row){
+            return [
+                'largo_max' => (float)$row['largo_max'],
+                'ancho_max' => (float)$row['ancho_max'],
+            ];
+        }
+    }
+    return ['largo_max'=>0,'ancho_max'=>0];
+}
+
 function get_tamanos_compra(mysqli $conn, string $material_clave): array{
     $sql = "SELECT largo_max, ancho_max, precio FROM material WHERE clave=? AND tipo='lamina'";
     $stmt = mysqli_prepare($conn, $sql);
@@ -570,5 +585,107 @@ function cotizar_lamina(mysqli $conn, int $armado, float $largo, float $ancho, f
         'precio_pieza_sin_iva'  => $precio_pieza_sin_iva,
         'precio_pieza_con_iva'  => $precio_pieza_con_iva,
     ];
+}
+
+function suaje_multiple_cabe(array $datos_caja, int $multiplo, array $material, array $suajado): bool{
+    $ml = $material['largo_max'] ?? 0;
+    $ma = $material['ancho_max'] ?? 0;
+    $sl = $suajado['largo_max'] ?? 0;
+    $sa = $suajado['ancho_max'] ?? 0;
+    foreach($datos_caja['largo_lamina'] as $i => $l){
+        $w = $datos_caja['ancho_lamina'][$i];
+        $fits = false;
+        $l1 = $l * $multiplo; $w1 = $w;
+        if((($l1 <= $ml && $w1 <= $ma) || ($w1 <= $ml && $l1 <= $ma)) &&
+           (($l1 <= $sl && $w1 <= $sa) || ($w1 <= $sl && $l1 <= $sa))){
+            $fits = true;
+        }else{
+            $l2 = $l; $w2 = $w * $multiplo;
+            if((($l2 <= $ml && $w2 <= $ma) || ($w2 <= $ml && $l2 <= $ma)) &&
+               (($l2 <= $sl && $w2 <= $sa) || ($w2 <= $sl && $l2 <= $sa))){
+                $fits = true;
+            }
+        }
+        if(!$fits){
+            return false;
+        }
+    }
+    return true;
+}
+
+function cotizar_suaje_multiple(mysqli $conn, int $armado, float $largo, float $ancho, float $alto, string $material_clave, array $opciones = []): array{
+    $material = get_material_info($conn, $material_clave);
+    if(!$material){
+        return [];
+    }
+    $datos_caja = obtener_datos_caja($armado, $largo, $ancho, $alto);
+    $suajado_limits = get_suajado_limits($conn);
+    $cm_base = 0;
+    foreach($datos_caja['cm_suaje'] as $c){
+        $cm_base += $c;
+    }
+    $volumenes = [1000,2000,3000,4000,5000,10000];
+    $resultados = [];
+    foreach($volumenes as $vol){
+        $m_max = (int)floor($vol/1000);
+        $mejor = null;
+        for($m=1; $m <= $m_max; $m++){
+            if(!suaje_multiple_cabe($datos_caja, $m, $material, $suajado_limits)){
+                continue;
+            }
+            $opc = $opciones;
+            $cm_total = $cm_base * $m;
+            $opc['cm_suaje'] = $cm_total;
+            if($material['tipo'] === 'lamina'){
+                $cot = cotizar_lamina($conn, $armado, $largo, $ancho, $alto, $material_clave, $opc);
+            }else{
+                $cot = cotizar_corrugado($conn, $armado, $largo, $ancho, $alto, $material_clave, $opc);
+            }
+            if(!$cot){
+                continue;
+            }
+            $precio_suaje = $cot['precio_suaje'];
+            $costo_material_millar = $cot['costo_material_millar'];
+            $costo_procesos_millar = $cot['costo_procesos_millar'];
+            $costo_suajado_millar = 0;
+            foreach($cot['procesos'] as $p){
+                if($p['nombre'] === 'suajado'){
+                    $costo_suajado_millar = $p['costo'];
+                    break;
+                }
+            }
+            $costo_proc_sin_su = $costo_procesos_millar - $costo_suajado_millar;
+            $costo_material_total = ($costo_material_millar/1000) * $vol;
+            $costo_proc_total = ($costo_proc_sin_su/1000) * $vol;
+            $golpes = (int)ceil($vol / $m);
+            $costo_suajado_total = $costo_suajado_millar * (int)ceil($golpes/1000);
+            $base_total = $costo_material_total + $costo_proc_total + $costo_suajado_total;
+            $utilidad = $cot['utilidad'];
+            $iva = $cot['iva'];
+            $costo_total_sin_iva = $base_total * (1 + $utilidad/100);
+            $precio_caja_sin_iva = $costo_total_sin_iva / $vol;
+            $precio_suaje_pieza = $precio_suaje / $vol;
+            $precio_total_sin_iva = $precio_caja_sin_iva + $precio_suaje_pieza;
+            $precio_total_con_iva = $precio_total_sin_iva * (1 + $iva/100);
+            if($mejor === null || $precio_total_sin_iva < $mejor['precio_total_sin_iva']){
+                $mejor = [
+                    'piezas_por_golpe' => $m,
+                    'cm_suaje_total' => $cm_total,
+                    'golpes' => $golpes,
+                    'costo_material_total' => $costo_material_total,
+                    'costo_procesos_total' => $costo_proc_total,
+                    'costo_suajado_total' => $costo_suajado_total,
+                    'precio_caja_sin_iva' => $precio_caja_sin_iva,
+                    'precio_suaje_pieza' => $precio_suaje_pieza,
+                    'precio_total_sin_iva' => $precio_total_sin_iva,
+                    'precio_total_con_iva' => $precio_total_con_iva,
+                ];
+            }
+        }
+        if($mejor){
+            $resultados[$vol] = $mejor;
+        }
+    }
+    return $resultados;
 }
 ?>
