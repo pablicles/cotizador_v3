@@ -65,6 +65,7 @@ $similares      = [];
 $cotizacion     = [];
 $mas            = false;
 $error_medidas  = false;
+$tabla_volumenes = [];
 if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
     $l = (float)$_GET['largo'];
     $a = (float)$_GET['ancho'];
@@ -116,6 +117,9 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                 $cotizacion = cotizar_lamina($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
             } else {
                 $cotizacion = cotizar_corrugado($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
+            }
+            if ($cotizacion) {
+                $tabla_volumenes = cotizar_suaje_multiple($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
             }
         }
     }
@@ -329,39 +333,40 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                         <th>IVA</th>
                         <th>Suaje</th>
                         <th>1</th>
-        		<th>25</th>
-        		<th>50</th>
-        		<th>100</th>
-        		<th>200</th>
-        		<th>500</th>
-        		<th>>1000</th>
-        	</tr>
-        	<tr>
-        		<td>Sin IVA</td>
-        		<td>$<?php echo number_format($cotizacion['precio_suaje'],2); ?></td>
-        		<td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*3,2); ?></td>
-        		<td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.3,2); ?></td>
-        		<td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.22,2); ?></td>
-        		<td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.16,2); ?></td>
-        		<td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.11,2); ?></td>
-        		<td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.05,2); ?></td>
-        		<td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva'],2); ?></td>
-        	</tr>
-        	<tr>
-        		<td>Con IVA</td>
-        		<td>$<?php echo number_format($cotizacion['precio_suaje']*1.16,2); ?></td>
-        		<td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*3,2); ?></td>
-        		<td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.3,2); ?></td>
-        		<td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.22,2); ?></td>
-        		<td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.16,2); ?></td>
-        		<td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.11,2); ?></td>
-        		<td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.05,2); ?></td>
-        		<td>$<?php echo number_format($cotizacion['precio_pieza_con_iva'],2); ?></td>
-        	</tr>
+                        <th>25</th>
+                        <th>50</th>
+                        <th>100</th>
+                        <th>200</th>
+                        <th>500</th>
+                        <th>>1000</th>
+                </tr>
+                <tr>
+                        <td>Sin IVA</td>
+                        <td>$<?php echo number_format($cotizacion['precio_suaje'],2); ?></td>
+                        <td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*3,2); ?></td>
+                        <td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.3,2); ?></td>
+                        <td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.22,2); ?></td>
+                        <td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.16,2); ?></td>
+                        <td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.11,2); ?></td>
+                        <td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.05,2); ?></td>
+                        <td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva'],2); ?></td>
+                </tr>
+                <tr>
+                        <td>Con IVA</td>
+                        <td>$<?php echo number_format($cotizacion['precio_suaje']*1.16,2); ?></td>
+                        <td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*3,2); ?></td>
+                        <td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.3,2); ?></td>
+                        <td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.22,2); ?></td>
+                        <td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.16,2); ?></td>
+                        <td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.11,2); ?></td>
+                        <td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.05,2); ?></td>
+                        <td>$<?php echo number_format($cotizacion['precio_pieza_con_iva'],2); ?></td>
+                </tr>
         </table>
-    </div>
-    <div class="card-footer">
-        <div class="collapse mt-3" id="desglose">
+        <div class="mt-2">
+            <button class="btn btn-sm btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#desglose" aria-expanded="false" aria-controls="desglose">Detalles</button>
+        </div>
+        <div class="collapse mt-2" id="desglose">
             <div class="card card-body">
                 <?php if($cotizacion['material']['tipo'] === 'lamina'): ?>
                     <p><strong>Merma:</strong> <?php echo $cotizacion['merma']; ?>%</p>
@@ -397,7 +402,59 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                 <p><strong>Costo millar con IVA:</strong> $<?php echo number_format($cotizacion['costo_millar_con_iva'],2); ?></p>
             </div>
         </div>
-        <button class="btn btn-sm btn-secondary float-right" type="button" data-bs-toggle="collapse" data-bs-target="#desglose" aria-expanded="false" aria-controls="desglose">Detalles</button>
+        <?php if($tabla_volumenes): ?>
+        <hr class="my-4">
+        <table class="table table-bordered table-striped">
+            <tr>
+                <th></th>
+                <?php foreach($tabla_volumenes as $vol => $info): ?>
+                    <th><?php echo number_format($vol); ?></th>
+                <?php endforeach; ?>
+            </tr>
+            <tr>
+                <td>Precio caja s/ IVA</td>
+                <?php foreach($tabla_volumenes as $info): ?>
+                    <td>$<?php echo number_format($info['precio_caja_sin_iva'],2); ?></td>
+                <?php endforeach; ?>
+            </tr>
+            <tr>
+                <td>Suaje por pieza s/ IVA</td>
+                <?php foreach($tabla_volumenes as $info): ?>
+                    <td>$<?php echo number_format($info['precio_suaje_pieza'],2); ?></td>
+                <?php endforeach; ?>
+            </tr>
+            <tr>
+                <td>Caja + suaje s/ IVA</td>
+                <?php foreach($tabla_volumenes as $info): ?>
+                    <td>$<?php echo number_format($info['precio_total_sin_iva'],2); ?></td>
+                <?php endforeach; ?>
+            </tr>
+            <tr>
+                <td>Caja + suaje c/ IVA</td>
+                <?php foreach($tabla_volumenes as $info): ?>
+                    <td>$<?php echo number_format($info['precio_total_con_iva'],2); ?></td>
+                <?php endforeach; ?>
+            </tr>
+            <tr>
+                <td>Detalles</td>
+                <?php foreach($tabla_volumenes as $vol => $info): ?>
+                    <td><button class="btn btn-sm btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#detalle_<?php echo $vol; ?>" aria-expanded="false" aria-controls="detalle_<?php echo $vol; ?>">Detalles</button></td>
+                <?php endforeach; ?>
+            </tr>
+        </table>
+        <?php foreach($tabla_volumenes as $vol => $info): ?>
+        <div class="collapse mt-2" id="detalle_<?php echo $vol; ?>">
+            <div class="card card-body">
+                <p><strong>Piezas por golpe:</strong> <?php echo $info['piezas_por_golpe']; ?></p>
+                <p><strong>Golpes necesarios:</strong> <?php echo $info['golpes']; ?></p>
+                <p><strong>cm de suaje:</strong> <?php echo number_format($info['cm_suaje_total'],2); ?> cm</p>
+                <p><strong>Costo material:</strong> $<?php echo number_format($info['costo_material_total'],2); ?></p>
+                <p><strong>Costo procesos sin suajado:</strong> $<?php echo number_format($info['costo_procesos_total'],2); ?></p>
+                <p><strong>Costo suajado:</strong> $<?php echo number_format($info['costo_suajado_total'],2); ?></p>
+            </div>
+        </div>
+        <?php endforeach; ?>
+        <?php endif; ?>
     </div>
 </div>
 <?php elseif ($error_medidas && isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])): ?>
