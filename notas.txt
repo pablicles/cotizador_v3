@@ -127,3 +127,46 @@ Mostrar los resultados en la card que esta despues de la card de similares.
 
 Consideraciones
 -En el botón "ver más" mostrar todos los parametros que se usaron en la cotización (como tamaño compra, numero de tamaños compra, provechos, etc.)
+
+-----------------------------------
+
+Suajes multiples: (Pendiente)
+Una manera de reducir costos es aumentar el numero de cajas que se suajan en cada golpe (Proceso de suajado). 
+Se pueden crear suajes de multiples, para esto se multiplican los cm de suaje por el numero de piezas a suajar por golpe, por ejemplo si se calculo que el suaje será de 200 cm, podemos hacer que haga 2 cajas por golpe haciendolo de 400 cm.
+Para duplicar el numero de piezas por golpe se debe duplicar tambien el área del sustrato, duplicando una de sus medidas, por ejemplo en una lamina de 30x20cm pasaría a medir 30x40 cm.
+Se deben realizar todas las combinaciones que sean posibles con las medidas 
+
+-----------------------------------
+Acabados:
+-Barniz
+	*2.80
+-Laminado
+	*6.00
+
+Offset
+-Interno:
+	*medidas maximas 70x50
+	*medidas minimas 45x30
+	*costo tiro $180
+	*costo tiro plasta $400
+	*costo placa $180
+-Externo:
+	*medidas maximas 100x72
+	*medidas minimas 45x30
+	*costo tiro $350
+	*costo tiro plasta $850
+	*costo placa $350
+
+
+-----------------------------------
+Offset
+
+Entradas, Agregar al formulario de cotizacion:
+-Impresión offset (Switch). Nota: el switch se mantiene "disabled" si el material es tipo "metro". Solo se habilita cuando el material es tipo "lamina".
+-Si se activa el switch "Impresión offset" mostrar:
+	-Tintas (Radio, 1, 2, 3 y 4 tintas)
+	-Con plastas (Switch)
+
+Proceso:
+*Obtener la información de la impresión offset de la BD (Medidas maximas, medidas minimas, costo de la placa).
+*

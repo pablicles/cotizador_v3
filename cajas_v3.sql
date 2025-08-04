@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 30-07-2025 a las 18:38:31
+-- Tiempo de generación: 04-08-2025 a las 21:12:04
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -20,6 +20,18 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `cajas_v3`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `acabados`
+--
+
+CREATE TABLE `acabados` (
+  `id` int(11) NOT NULL,
+  `nombre` varchar(20) NOT NULL,
+  `precio` decimal(6,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -394,25 +406,53 @@ INSERT INTO `material` (`id`, `tipo`, `clave`, `descripcion`, `resistencia`, `gr
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `offet`
+--
+
+CREATE TABLE `offet` (
+  `id` int(11) NOT NULL,
+  `nombre` varchar(20) NOT NULL,
+  `largo_max` int(3) NOT NULL,
+  `ancho_max` int(11) NOT NULL,
+  `largo_min` int(3) NOT NULL,
+  `ancho_min` int(11) NOT NULL,
+  `tiro` decimal(6,2) NOT NULL,
+  `plasta` decimal(6,2) NOT NULL,
+  `placa` decimal(6,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `offet`
+--
+
+INSERT INTO `offet` (`id`, `nombre`, `largo_max`, `ancho_max`, `largo_min`, `ancho_min`, `tiro`, `plasta`, `placa`) VALUES
+(1, 'interna', 70, 50, 45, 30, 180.00, 400.00, 180.00),
+(2, 'maquila', 100, 72, 45, 30, 350.00, 850.00, 350.00);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `procesos`
 --
 
 CREATE TABLE `procesos` (
   `id` int(11) NOT NULL,
   `nombre` varchar(20) NOT NULL,
-  `precio` double(8,2) NOT NULL
+  `precio` double(8,2) NOT NULL,
+  `largo_max` int(4) DEFAULT NULL,
+  `ancho_max` int(4) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `procesos`
 --
 
-INSERT INTO `procesos` (`id`, `nombre`, `precio`) VALUES
-(1, 'Rallado', 400.00),
-(2, 'Ranurado', 400.00),
-(3, 'pegado', 1000.00),
-(4, 'empaquetado', 400.00),
-(5, 'suajado', 0.00);
+INSERT INTO `procesos` (`id`, `nombre`, `precio`, `largo_max`, `ancho_max`) VALUES
+(1, 'Rallado', 400.00, NULL, NULL),
+(2, 'Ranurado', 400.00, NULL, NULL),
+(3, 'pegado', 1000.00, NULL, NULL),
+(4, 'empaquetado', 400.00, NULL, NULL),
+(5, 'suajado', 0.00, 210, 150);
 
 -- --------------------------------------------------------
 
@@ -509,8 +549,22 @@ CREATE TABLE `ventas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
+-- Volcado de datos para la tabla `ventas`
+--
+
+INSERT INTO `ventas` (`id`, `fecha`, `monto_venta`, `monto_envio`, `monto_suaje`, `cuenta`, `iva`, `vendedor`) VALUES
+(1, '2025-07-31', 1000.00, NULL, NULL, 'millop', 1, 1),
+(3, '2025-07-31', 3000.00, NULL, NULL, 'millop', 1, 1);
+
+--
 -- Índices para tablas volcadas
 --
+
+--
+-- Indices de la tabla `acabados`
+--
+ALTER TABLE `acabados`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `armado_procesos`
@@ -518,6 +572,12 @@ CREATE TABLE `ventas` (
 ALTER TABLE `armado_procesos`
   ADD KEY `id_armado` (`id_armado`),
   ADD KEY `id_proceso` (`id_proceso`);
+
+--
+-- Indices de la tabla `offet`
+--
+ALTER TABLE `offet`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `procesos`
@@ -541,11 +601,24 @@ ALTER TABLE `valores`
 -- Indices de la tabla `ventas`
 --
 ALTER TABLE `ventas`
+  ADD PRIMARY KEY (`id`),
   ADD KEY `vendedor` (`vendedor`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
 --
+
+--
+-- AUTO_INCREMENT de la tabla `acabados`
+--
+ALTER TABLE `acabados`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `offet`
+--
+ALTER TABLE `offet`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `procesos`
@@ -558,6 +631,12 @@ ALTER TABLE `procesos`
 --
 ALTER TABLE `valores`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT de la tabla `ventas`
+--
+ALTER TABLE `ventas`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
