@@ -120,6 +120,11 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
         }
     }
 }
+$volumenes = [1000,2000,3000,4000,5000,10000];
+$suajes_multiples = [];
+if($cotizacion && ($cotizacion['precio_suaje'] ?? 0) > 0){
+    $suajes_multiples = cotizar_suaje_multiple($conn, $cotizacion, $material_info_sel, $volumenes);
+}
 ?>
 <div class="card">
 	<div class="card-header">
@@ -400,6 +405,49 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
         <button class="btn btn-sm btn-secondary float-right" type="button" data-bs-toggle="collapse" data-bs-target="#desglose" aria-expanded="false" aria-controls="desglose">Detalles</button>
     </div>
 </div>
+<?php if($suajes_multiples): ?>
+<div class="card mt-3">
+    <div class="card-header"><h5>Resultados por volumen</h5></div>
+    <div class="card-body">
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Volumen</th>
+                    <?php foreach($volumenes as $v): ?>
+                        <th><?php echo number_format($v); ?></th>
+                    <?php endforeach; ?>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>Precio caja con IVA</th>
+                    <?php foreach($volumenes as $v): ?>
+                        <td>$<?php echo number_format($suajes_multiples[$v]['precio_caja_con_iva'],2); ?></td>
+                    <?php endforeach; ?>
+                </tr>
+                <tr>
+                    <th>Precio suaje con IVA</th>
+                    <?php foreach($volumenes as $v): ?>
+                        <td>$<?php echo number_format($suajes_multiples[$v]['precio_suaje_con_iva'],2); ?></td>
+                    <?php endforeach; ?>
+                </tr>
+                <tr>
+                    <th>Caja + suaje disuelto con IVA</th>
+                    <?php foreach($volumenes as $v): ?>
+                        <td>$<?php echo number_format($suajes_multiples[$v]['precio_total'],2); ?></td>
+                    <?php endforeach; ?>
+                </tr>
+                <tr>
+                    <th>Detalles</th>
+                    <?php foreach($volumenes as $v): ?>
+                        <td><button class="btn btn-sm btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#desglose" aria-expanded="false" aria-controls="desglose">Detalles</button></td>
+                    <?php endforeach; ?>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php endif; ?>
 <?php elseif ($error_medidas && isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])): ?>
 <div class="alert alert-danger mt-3">Las medidas calculadas del sustrato exceden el tamaño máximo del material seleccionado.</div>
 <?php endif; ?>
