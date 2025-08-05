@@ -169,4 +169,15 @@ Entradas, Agregar al formulario de cotizacion:
 
 Proceso:
 *Obtener la información de la impresión offset de la BD (Medidas maximas, medidas minimas, costo de la placa).
-*
+*Nuevo termino "tamaño maquina": Es la medida del sustrato que se usara para impresión, debe validarse con los minimos y máximos de cada proveedor.
+*El tamaño maquina es una subparte del tamaño compra y puede o no ser igual a este.
+	-En caso de que las medidas del provecho sean menores que el minimo para offset, se colocarán varios provechos en el tamaño maquina a fin de cubrir el minimo. Los provechos pueden ir verticales u horizontales a fin de aprovechar al máximo el sustrato.
+	-Si es optimo se pueden agregar cm extra al provecho, con el fin de llegar al minimo sin aumentar los provechos (Si se hace debe señalarse)
+	-Se puede jugar con los provechos por tamaño maquina, así como con suajes multiples con el fin de obtener el mejor costo por pieza posible.
+*Costos de impresión:
+	-Se deben calcular los tiros. 
+		-Numero de tiros = (Numero de tintas * numero de tamaños maquina) / 1000
+		-Si numero de tiros es menor que numero de tintas entonces numero de tiros = numero de tintas.
+
+-Todos los factores se combinan con la finalidad de obtener el mejor precio por unidad posible.
+	
