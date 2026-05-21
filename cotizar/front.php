@@ -3,6 +3,7 @@ require_once 'funciones.php';
 
 $armados    = get_armados($conn);
 $materiales = get_materiales($conn);
+$acabados_db = get_acabados($conn);
 
 $selected_armado   = isset($_GET['armado']) ? (int)$_GET['armado'] : 1;
 $selected_material = $_GET['material'] ?? ($materiales[0]['clave'] ?? '');
@@ -113,6 +114,12 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
             if ($proc_ops) {
                 $opciones['procesos'] = $proc_ops;
             }
+            if ($material_tipo_sel === 'lamina' && !empty($_GET['offset'])) {
+                $opciones['offset'] = true;
+                $opciones['offset_tintas'] = $_GET['offset_tintas'] ?? 1;
+                $opciones['offset_plasta'] = !empty($_GET['offset_plasta']);
+                $opciones['acabados'] = $_GET['acabados'] ?? [];
+            }
             if ($material_tipo_sel === 'lamina') {
                 $cotizacion = cotizar_lamina($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
             } else {
@@ -169,7 +176,7 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
 				<div class="col-12 col-lg-3 mb-lg-3">
 					<select class="form-control" name="material" id="material">
 						<?php foreach($materiales as $m): ?>
-							<option value="<?php echo $m['clave']; ?>" <?php echo ($m['clave'] == $selected_material) ? 'selected' : ''; ?>>
+							<option value="<?php echo $m['clave']; ?>" data-tipo="<?php echo htmlspecialchars($m['tipo']); ?>" <?php echo ($m['clave'] == $selected_material) ? 'selected' : ''; ?>>
 								<?php echo htmlspecialchars($m['descripcion']) . " - $" . number_format($m['precio_m2'], 2) . "/m²"; ?>
 							</option>
 						<?php endforeach; ?>
@@ -241,7 +248,46 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                                         <input class="form-control" type="number" step="0.01" name="iva" id="iva" value="<?php echo htmlspecialchars($iva_def); ?>" data-check-target="chk_iva">
                                 </div>
 			</div>
-			<div class="row">
+            <div class="row mt-3" id="container_offset" style="display: <?php echo $material_tipo_sel === 'lamina' ? 'flex' : 'none'; ?>;">
+                <div class="col-12">
+                    <div class="card card-body bg-light">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="usar_offset" name="offset" value="1" <?php echo !empty($_GET['offset']) ? 'checked' : ''; ?>>
+                            <label class="form-check-label fw-bold" for="usar_offset">Impresión Offset</label>
+                        </div>
+                        <div id="offset_options" style="display: <?php echo !empty($_GET['offset']) ? 'block' : 'none'; ?>;">
+                            <div class="row">
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label">Tintas</label><br>
+                                    <?php for($i=1; $i<=4; $i++): ?>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="offset_tintas" id="tinta_<?php echo $i; ?>" value="<?php echo $i; ?>" <?php echo (($_GET['offset_tintas']??1) == $i) ? 'checked' : ''; ?>>
+                                            <label class="form-check-label" for="tinta_<?php echo $i; ?>"><?php echo $i; ?></label>
+                                        </div>
+                                    <?php endfor; ?>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label">Plastas</label>
+                                    <div class="form-check form-switch mt-1">
+                                        <input class="form-check-input" type="checkbox" id="offset_plasta" name="offset_plasta" value="1" <?php echo !empty($_GET['offset_plasta']) ? 'checked' : ''; ?>>
+                                        <label class="form-check-label" for="offset_plasta">Con plastas</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Acabados (Por m²)</label><br>
+                                    <?php foreach($acabados_db as $ac): ?>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" name="acabados[]" id="acabado_<?php echo $ac['id']; ?>" value="<?php echo $ac['id']; ?>" <?php echo (!empty($_GET['acabados']) && in_array($ac['id'], $_GET['acabados'])) ? 'checked' : ''; ?>>
+                                            <label class="form-check-label" for="acabado_<?php echo $ac['id']; ?>"><?php echo htmlspecialchars($ac['nombre']); ?></label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+			<div class="row mt-3">
 				<div class="col-12 text-right">
 					<button type="submit" class="btn btn-primary">Cotizar</button>
 				</div>
@@ -377,6 +423,27 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                             <li>Precio tamaño compra con IVA: $<?php echo number_format($lam['precio_unit_iva'],2); ?></li>
                             <li>Costo sustrato: $<?php echo number_format($lam['costo'],2); ?></li>
                         </ul>
+                        <?php if(!empty($lam['offset'])): ?>
+                            <p class="mb-0 mt-2"><strong>Impresión Offset (<?php echo htmlspecialchars($lam['offset']['provider']); ?>)</strong></p>
+                            <ul>
+                                <li>Tamaño máquina: <?php echo $lam['offset']['maquina_largo']; ?> x <?php echo $lam['offset']['maquina_ancho']; ?> cm</li>
+                                <li>Provechos por máquina: <?php echo $lam['offset']['provechos_por_maquina']; ?></li>
+                                <li>Máquinas por tamaño compra: <?php echo $lam['offset']['maquinas_por_compra']; ?></li>
+                                <li>Pliegos máquina totales: <?php echo $lam['offset']['total_maquinas']; ?></li>
+                                <li>Tiros a cobrar: <?php echo $lam['offset']['tiros']; ?> (Costo: $<?php echo number_format($lam['offset']['costo_tiros'], 2); ?>)</li>
+                                <li>Costo placas: $<?php echo number_format($lam['offset']['costo_placas'], 2); ?></li>
+                                <li><strong>Subtotal Offset: $<?php echo number_format($lam['offset']['costo_total'], 2); ?></strong></li>
+                            </ul>
+                        <?php endif; ?>
+                        <?php if(!empty($lam['acabados']) && !empty($lam['acabados']['detalle'])): ?>
+                            <p class="mb-0 mt-2"><strong>Acabados</strong></p>
+                            <ul>
+                                <?php foreach($lam['acabados']['detalle'] as $acd): ?>
+                                    <li><?php echo htmlspecialchars($acd['nombre']); ?>: $<?php echo number_format($acd['costo'], 2); ?></li>
+                                <?php endforeach; ?>
+                                <li><strong>Subtotal Acabados: $<?php echo number_format($lam['acabados']['costo_total'], 2); ?></strong></li>
+                            </ul>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <p><strong>Área de sustrato:</strong> <?php echo number_format($cotizacion['area_m2'],4); ?> m²</p>
@@ -384,6 +451,12 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                     <p><strong>Área con merma:</strong> <?php echo number_format($cotizacion['area_m2_con_merma'],4); ?> m²</p>
                 <?php endif; ?>
                 <p><strong>Costo material por millar:</strong> $<?php echo number_format($cotizacion['costo_material_millar'],2); ?></p>
+                <?php if(!empty($cotizacion['costo_offset_millar'])): ?>
+                    <p><strong>Costo offset por millar:</strong> $<?php echo number_format($cotizacion['costo_offset_millar'],2); ?></p>
+                <?php endif; ?>
+                <?php if(!empty($cotizacion['costo_acabados_millar'])): ?>
+                    <p><strong>Costo acabados por millar:</strong> $<?php echo number_format($cotizacion['costo_acabados_millar'],2); ?></p>
+                <?php endif; ?>
                 <p><strong>Procesos:</strong></p>
                 <ul>
                 <?php foreach ($cotizacion['procesos'] as $proc): ?>
@@ -477,5 +550,31 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    const materialSelect = document.getElementById('material');
+    const containerOffset = document.getElementById('container_offset');
+    const cbUsarOffset = document.getElementById('usar_offset');
+    const divOffsetOptions = document.getElementById('offset_options');
+
+    if(materialSelect && containerOffset) {
+        materialSelect.addEventListener('change', function(){
+            const option = this.options[this.selectedIndex];
+            if(option.dataset.tipo === 'lamina'){
+                containerOffset.style.display = 'flex';
+            }else{
+                containerOffset.style.display = 'none';
+            }
+        });
+    }
+
+    if(cbUsarOffset && divOffsetOptions) {
+        cbUsarOffset.addEventListener('change', function(){
+            if(this.checked){
+                divOffsetOptions.style.display = 'block';
+            }else{
+                divOffsetOptions.style.display = 'none';
+            }
+        });
+    }
 });
 </script>

@@ -256,6 +256,30 @@ function obtener_datos_caja($armado, $largo_caja, $ancho_caja, $alto_caja){
     }
 }
 
+function get_acabados(mysqli $conn) {
+    $sql = "SELECT id, nombre, precio FROM acabados ORDER BY nombre ASC";
+    $res = mysqli_query($conn, $sql);
+    $acabados = [];
+    if($res){
+        while($row = mysqli_fetch_assoc($res)){
+            $acabados[] = $row;
+        }
+    }
+    return $acabados;
+}
+
+function get_offset_providers(mysqli $conn) {
+    $sql = "SELECT * FROM offet";
+    $res = mysqli_query($conn, $sql);
+    $providers = [];
+    if($res){
+        while($row = mysqli_fetch_assoc($res)){
+            $providers[] = $row;
+        }
+    }
+    return $providers;
+}
+
 function get_valor(mysqli $conn, string $nombre){
     $stmt = mysqli_prepare($conn, "SELECT precio FROM valores WHERE nombre=? LIMIT 1");
     if(!$stmt){
@@ -479,47 +503,180 @@ function cotizar_lamina(mysqli $conn, int $armado, float $largo, float $ancho, f
         return [];
     }
 
+    $usar_offset = !empty($opciones['offset']);
+    $tintas = (int)($opciones['offset_tintas'] ?? 1);
+    $con_plasta = !empty($opciones['offset_plasta']);
+    $acabados_seleccionados = $opciones['acabados'] ?? [];
+    $providers = $usar_offset ? get_offset_providers($conn) : [];
+    $acabados_db = $usar_offset ? get_acabados($conn) : [];
+    $acabados_map = [];
+    foreach($acabados_db as $ac) $acabados_map[$ac['id']] = $ac;
+
     $laminas_detalle = [];
     $costo_material_millar = 0;
+    $costo_offset_millar = 0;
+    $costo_acabados_millar = 0;
+
     foreach($datos_caja['largo_lamina'] as $i => $ll){
         $al = $datos_caja['ancho_lamina'][$i];
         $best = null;
-        foreach($tamanos as $t){
-            $p1 = floor($t['largo'] / $ll) * floor($t['ancho'] / $al);
-            $p2 = floor($t['largo'] / $al) * floor($t['ancho'] / $ll);
-            $p = max($p1, $p2);
-            if($p <= 0){
-                continue;
+
+        if ($usar_offset) {
+            foreach($providers as $prov) {
+                foreach($tamanos as $t) {
+                    for($rotar = 0; $rotar <= 1; $rotar++) {
+                        $p_l = $rotar ? $al : $ll;
+                        $p_a = $rotar ? $ll : $al;
+
+                        $max_gx = max(1, floor($prov['largo_max'] / $p_l));
+                        $max_gy = max(1, floor($prov['ancho_max'] / $p_a));
+
+                        for($gx = 1; $gx <= $max_gx; $gx++) {
+                            for($gy = 1; $gy <= $max_gy; $gy++) {
+                                $m_l = $p_l * $gx;
+                                $m_a = $p_a * $gy;
+
+                                $m_l_pad = max($m_l, $prov['largo_min']);
+                                $m_a_pad = max($m_a, $prov['ancho_min']);
+
+                                if ($m_l_pad > $prov['largo_max'] || $m_a_pad > $prov['ancho_max']) continue;
+
+                                $fit1 = floor($t['largo'] / $m_l_pad) * floor($t['ancho'] / $m_a_pad);
+                                $fit2 = floor($t['largo'] / $m_a_pad) * floor($t['ancho'] / $m_l_pad);
+                                $nm = max($fit1, $fit2);
+
+                                if ($nm > 0) {
+                                    $provechos_per_compra = ($gx * $gy) * $nm;
+                                    $laminas_nec = (int)ceil(1000 / $provechos_per_compra);
+                                    $laminas_merma = (int)ceil($laminas_nec * (1 + $merma / 100));
+
+                                    $precio_unit_iva = ($t['precio'] / 1000) * (1 + $iva / 100);
+                                    $costo_sustrato = $laminas_merma * $precio_unit_iva;
+
+                                    $tamanos_maquina = $laminas_merma * $nm;
+                                    $tiros = ($tintas * $tamanos_maquina) / 1000;
+                                    if ($tiros < $tintas) $tiros = $tintas;
+
+                                    $costo_tiros = $tiros * ($con_plasta ? $prov['plasta'] : $prov['tiro']);
+                                    $costo_placas = $tintas * $prov['placa'];
+                                    $costo_offset = $costo_tiros + $costo_placas;
+
+                                    $costo_acabados = 0;
+                                    $detalle_acabados = [];
+                                    foreach($acabados_seleccionados as $ac_id) {
+                                        if(isset($acabados_map[$ac_id])) {
+                                            $ac = $acabados_map[$ac_id];
+                                            $area_m2 = ($m_l_pad * $m_a_pad) / 10000;
+                                            $area_total_m2 = $area_m2 * $tamanos_maquina;
+                                            $c_ac = $area_total_m2 * $ac['precio'];
+
+                                            $costo_acabados += $c_ac;
+                                            $detalle_acabados[] = [
+                                                'nombre' => $ac['nombre'],
+                                                'costo' => $c_ac
+                                            ];
+                                        }
+                                    }
+
+                                    $costo_total = $costo_sustrato + $costo_offset + $costo_acabados;
+
+                                    if ($best === null || $costo_total < $best['costo_total']) {
+                                        $best = [
+                                            'largo' => $t['largo'],
+                                            'ancho' => $t['ancho'],
+                                            'provechos' => $provechos_per_compra,
+                                            'precio_unit_iva' => $precio_unit_iva,
+                                            'laminas_necesarias' => $laminas_nec,
+                                            'laminas_merma' => $laminas_merma,
+                                            'costo_total' => $costo_total,
+                                            'costo_sustrato' => $costo_sustrato,
+                                            'usa_offset' => true,
+                                            'offset_provider' => $prov['nombre'],
+                                            'tam_maquina_largo' => $m_l_pad,
+                                            'tam_maquina_ancho' => $m_a_pad,
+                                            'provechos_por_maquina' => ($gx * $gy),
+                                            'maquinas_por_compra' => $nm,
+                                            'tamanos_maquina_total' => $tamanos_maquina,
+                                            'tiros_cobrados' => $tiros,
+                                            'costo_tiros' => $costo_tiros,
+                                            'costo_placas' => $costo_placas,
+                                            'costo_offset' => $costo_offset,
+                                            'detalle_acabados' => $detalle_acabados,
+                                            'costo_acabados' => $costo_acabados,
+                                        ];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            $precio_unit = $t['precio'] / 1000;
-            $precio_prov = $precio_unit / $p;
-            if($best === null || $precio_prov < $best['precio_prov'] || ($precio_prov == $best['precio_prov'] && $p > $best['provechos'])){
-                $best = [
-                    'largo' => $t['largo'],
-                    'ancho' => $t['ancho'],
-                    'precio_unit' => $precio_unit,
-                    'provechos' => $p,
-                    'precio_prov' => $precio_prov,
-                ];
+        } else {
+            foreach($tamanos as $t){
+                $p1 = floor($t['largo'] / $ll) * floor($t['ancho'] / $al);
+                $p2 = floor($t['largo'] / $al) * floor($t['ancho'] / $ll);
+                $p = max($p1, $p2);
+                if($p <= 0){
+                    continue;
+                }
+                $precio_unit = $t['precio'] / 1000;
+                $precio_prov = $precio_unit / $p;
+                if($best === null || $precio_prov < $best['precio_prov'] || ($precio_prov == $best['precio_prov'] && $p > $best['provechos'])){
+                    $laminas_nec = (int)ceil(1000 / $p);
+                    $laminas_merma = (int)ceil($laminas_nec * (1 + $merma / 100));
+                    $precio_unit_iva = $precio_unit * (1 + $iva / 100);
+                    $costo_sustrato = $laminas_merma * $precio_unit_iva;
+
+                    $best = [
+                        'largo' => $t['largo'],
+                        'ancho' => $t['ancho'],
+                        'provechos' => $p,
+                        'precio_prov' => $precio_prov,
+                        'precio_unit_iva' => $precio_unit_iva,
+                        'laminas_necesarias' => $laminas_nec,
+                        'laminas_merma' => $laminas_merma,
+                        'costo_sustrato' => $costo_sustrato,
+                        'usa_offset' => false
+                    ];
+                }
             }
         }
+
         if($best === null){
             return [];
         }
-        $laminas_nec = (int)ceil(1000 / $best['provechos']);
-        $laminas_merma = (int)ceil($laminas_nec * (1 + $merma / 100));
-        $precio_unit_iva = $best['precio_unit'] * (1 + $iva / 100);
-        $costo = $laminas_merma * $precio_unit_iva;
-        $costo_material_millar += $costo;
+
+        $costo_material_millar += $best['costo_sustrato'];
+        if ($best['usa_offset']) {
+            $costo_offset_millar += $best['costo_offset'];
+            $costo_acabados_millar += $best['costo_acabados'];
+        }
+
         $laminas_detalle[] = [
             'nombre' => $datos_caja['nombre'][$i] ?? 'Parte '.($i+1),
             'tam_largo' => $best['largo'],
             'tam_ancho' => $best['ancho'],
             'provechos' => $best['provechos'],
-            'laminas_necesarias' => $laminas_nec,
-            'laminas_merma' => $laminas_merma,
-            'precio_unit_iva' => $precio_unit_iva,
-            'costo' => $costo,
+            'laminas_necesarias' => $best['laminas_necesarias'],
+            'laminas_merma' => $best['laminas_merma'],
+            'precio_unit_iva' => $best['precio_unit_iva'],
+            'costo' => $best['costo_sustrato'],
+            'offset' => $best['usa_offset'] ? [
+                'provider' => $best['offset_provider'],
+                'maquina_largo' => $best['tam_maquina_largo'],
+                'maquina_ancho' => $best['tam_maquina_ancho'],
+                'provechos_por_maquina' => $best['provechos_por_maquina'],
+                'maquinas_por_compra' => $best['maquinas_por_compra'],
+                'total_maquinas' => $best['tamanos_maquina_total'],
+                'tiros' => $best['tiros_cobrados'],
+                'costo_tiros' => $best['costo_tiros'],
+                'costo_placas' => $best['costo_placas'],
+                'costo_total' => $best['costo_offset'],
+            ] : null,
+            'acabados' => $best['usa_offset'] ? [
+                'detalle' => $best['detalle_acabados'],
+                'costo_total' => $best['costo_acabados']
+            ] : null
         ];
     }
 
@@ -548,7 +705,7 @@ function cotizar_lamina(mysqli $conn, int $armado, float $largo, float $ancho, f
         $costo_procesos_millar += $costo;
     }
 
-    $base_millar = $costo_material_millar + $costo_procesos_millar;
+    $base_millar = $costo_material_millar + $costo_procesos_millar + $costo_offset_millar + $costo_acabados_millar;
     $utilidad_monto = $base_millar * $utilidad / 100;
     $costo_millar_sin_iva = $base_millar + $utilidad_monto;
     $sobrantes_monto = 0;
@@ -572,6 +729,8 @@ function cotizar_lamina(mysqli $conn, int $armado, float $largo, float $ancho, f
         'procesos'              => $procesos_detalle,
         'costo_material_millar' => $costo_material_millar,
         'costo_procesos_millar' => $costo_procesos_millar,
+        'costo_offset_millar'   => $costo_offset_millar,
+        'costo_acabados_millar' => $costo_acabados_millar,
         'base_millar'           => $base_millar,
         'utilidad'              => $utilidad,
         'utilidad_monto'        => $utilidad_monto,
