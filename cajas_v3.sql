@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 04-08-2025 a las 21:12:04
+-- Tiempo de generación: 27-05-2026 a las 19:36:52
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -32,6 +32,14 @@ CREATE TABLE `acabados` (
   `nombre` varchar(20) NOT NULL,
   `precio` decimal(6,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `acabados`
+--
+
+INSERT INTO `acabados` (`id`, `nombre`, `precio`) VALUES
+(1, 'Barniz', 2.80),
+(2, 'Laminado', 6.00);
 
 -- --------------------------------------------------------
 
@@ -352,6 +360,78 @@ INSERT INTO `catalogo_productos` (`Nombre`, `SKU`, `Color`, `Precio_Unit`, `Mini
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `clientes`
+--
+
+CREATE TABLE `clientes` (
+  `id` int(11) NOT NULL,
+  `nombre_empresa` varchar(150) NOT NULL,
+  `contacto` varchar(100) DEFAULT NULL,
+  `telefono` varchar(20) DEFAULT NULL,
+  `correo` varchar(100) DEFAULT NULL,
+  `direccion` text DEFAULT NULL,
+  `fecha_registro` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `cotizaciones`
+--
+
+CREATE TABLE `cotizaciones` (
+  `id` int(11) NOT NULL,
+  `cliente_id` int(11) NOT NULL,
+  `vendedor_id` int(11) NOT NULL,
+  `fecha_creacion` datetime NOT NULL DEFAULT current_timestamp(),
+  `estatus` enum('Borrador','Pendiente','Aprobada','En Produccion','Completada','Cancelada') NOT NULL DEFAULT 'Borrador',
+  `subtotal` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `iva` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `total` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `notas_cliente` text DEFAULT NULL,
+  `notas_internas` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `cotizaciones_detalles`
+--
+
+CREATE TABLE `cotizaciones_detalles` (
+  `id` int(11) NOT NULL,
+  `cotizacion_id` int(11) NOT NULL,
+  `tipo_item` enum('a_medida','catalogo','servicio_pasivo','servicio_activo') NOT NULL,
+  `descripcion` varchar(255) NOT NULL COMMENT 'Nombre corto que verá el cliente',
+  `cantidad` int(11) NOT NULL,
+  `costo_unitario` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT 'Costo real (para calcular tu utilidad)',
+  `precio_unitario` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT 'Precio de venta final al cliente',
+  `subtotal` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `sku_catalogo` varchar(50) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `detalle_caja_medida`
+--
+
+CREATE TABLE `detalle_caja_medida` (
+  `id_detalle` int(11) NOT NULL COMMENT 'Mismo ID que en cotizaciones_detalles',
+  `largo` decimal(5,2) NOT NULL,
+  `ancho` decimal(5,2) NOT NULL,
+  `alto` decimal(5,2) NOT NULL,
+  `id_material` int(11) NOT NULL,
+  `id_armado` int(11) NOT NULL,
+  `impresion_offset` tinyint(1) NOT NULL DEFAULT 0,
+  `tintas` int(1) DEFAULT 0 COMMENT 'Número de tintas (si aplica)',
+  `acabados_ids` varchar(100) DEFAULT NULL,
+  `serigrafia` tinyint(1) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `material`
 --
 
@@ -428,6 +508,21 @@ CREATE TABLE `offet` (
 INSERT INTO `offet` (`id`, `nombre`, `largo_max`, `ancho_max`, `largo_min`, `ancho_min`, `tiro`, `plasta`, `placa`) VALUES
 (1, 'interna', 70, 50, 45, 30, 180.00, 400.00, 180.00),
 (2, 'maquila', 100, 72, 45, 30, 350.00, 850.00, 350.00);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `ordenes_produccion`
+--
+
+CREATE TABLE `ordenes_produccion` (
+  `id` int(11) NOT NULL,
+  `cotizacion_id` int(11) NOT NULL,
+  `fecha_inicio` datetime NOT NULL DEFAULT current_timestamp(),
+  `fecha_entrega_estimada` date DEFAULT NULL,
+  `estatus_kanban` enum('Pendiente','Diseno','Impresion','Suaje','Terminado','Entregado') NOT NULL DEFAULT 'Pendiente',
+  `prioridad` enum('Normal','Alta','Urgente') NOT NULL DEFAULT 'Normal'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -574,10 +669,45 @@ ALTER TABLE `armado_procesos`
   ADD KEY `id_proceso` (`id_proceso`);
 
 --
+-- Indices de la tabla `clientes`
+--
+ALTER TABLE `clientes`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `cotizaciones`
+--
+ALTER TABLE `cotizaciones`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `cliente_id` (`cliente_id`),
+  ADD KEY `vendedor_id` (`vendedor_id`);
+
+--
+-- Indices de la tabla `cotizaciones_detalles`
+--
+ALTER TABLE `cotizaciones_detalles`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `cotizacion_id` (`cotizacion_id`),
+  ADD KEY `sku_catalogo` (`sku_catalogo`);
+
+--
+-- Indices de la tabla `detalle_caja_medida`
+--
+ALTER TABLE `detalle_caja_medida`
+  ADD PRIMARY KEY (`id_detalle`);
+
+--
 -- Indices de la tabla `offet`
 --
 ALTER TABLE `offet`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `ordenes_produccion`
+--
+ALTER TABLE `ordenes_produccion`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `cotizacion_id` (`cotizacion_id`);
 
 --
 -- Indices de la tabla `procesos`
@@ -612,6 +742,24 @@ ALTER TABLE `ventas`
 -- AUTO_INCREMENT de la tabla `acabados`
 --
 ALTER TABLE `acabados`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de la tabla `clientes`
+--
+ALTER TABLE `clientes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `cotizaciones`
+--
+ALTER TABLE `cotizaciones`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `cotizaciones_detalles`
+--
+ALTER TABLE `cotizaciones_detalles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -619,6 +767,12 @@ ALTER TABLE `acabados`
 --
 ALTER TABLE `offet`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de la tabla `ordenes_produccion`
+--
+ALTER TABLE `ordenes_produccion`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `procesos`
@@ -637,6 +791,16 @@ ALTER TABLE `valores`
 --
 ALTER TABLE `ventas`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- Restricciones para tablas volcadas
+--
+
+--
+-- Filtros para la tabla `detalle_caja_medida`
+--
+ALTER TABLE `detalle_caja_medida`
+  ADD CONSTRAINT `fk_detalle_general` FOREIGN KEY (`id_detalle`) REFERENCES `cotizaciones_detalles` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

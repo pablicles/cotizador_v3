@@ -1,5 +1,9 @@
 <?php
 session_start();
+ob_start(); // Inicia el buffer de salida para evitar el error de headers already sent
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 require 'conn.php';
 $action = $_GET['action'] ?? 'cotizar';
 
@@ -88,6 +92,12 @@ if (!isset($_SESSION['usuario_id'])) {
 							</a>
 						</li>
 						<li class="nav-item">
+							<a href="index.php?action=clientes" class="nav-link">
+								<i class="nav-icon fa-solid fa-users"></i>
+								<p>Clientes</p>
+							</a>
+						</li>
+						<li class="nav-item">
 							<a href="index.php?action=registro_ventas" class="nav-link">
 								<i class="nav-icon fa-solid fa-cart-shopping"></i>
 								<p>Ventas</p>
@@ -136,6 +146,22 @@ if (!isset($_SESSION['usuario_id'])) {
 							require 'tablas/front.php';
 							break;
 							
+							case 'guardar_cotizacion':
+							require 'cotizar/guardar_cotizacion.php';
+							break;
+
+							case 'clientes':
+							require 'clientes/front.php';
+							break;
+
+							case 'clientes_guardar':
+							require 'clientes/guardar.php';
+							break;
+
+							case 'clientes_eliminar':
+							require 'clientes/eliminar.php';
+							break;
+							
 							default:
 							require 'cotizar/front.php';
 							break;
@@ -170,4 +196,3 @@ if (!isset($_SESSION['usuario_id'])) {
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 	</body>
 	</html>
-

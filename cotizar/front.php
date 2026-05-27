@@ -127,11 +127,66 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
             }
             if ($cotizacion) {
                 $tabla_volumenes = cotizar_suaje_multiple($conn, $selected_armado, $l, $a, $h, $selected_material, $opciones);
+                
+                // Generar tabla unificada de escalas
+                $escalas = [];
+                $multipliers = [1 => 3, 25 => 1.3, 50 => 1.22, 100 => 1.16, 200 => 1.11, 500 => 1.05];
+                $base_suaje = $cotizacion['precio_suaje'] ?? 0;
+                $base_caja = $cotizacion['precio_pieza_sin_iva'] ?? 0;
+                $base_costo_caja = ($cotizacion['base_millar'] ?? 0) / 1000;
+                
+                foreach($multipliers as $v => $mult) {
+                    $p_caja = $base_caja * $mult;
+                    $suaje_u = $base_suaje / $v;
+                    $p_final = $p_caja + $suaje_u;
+                    $subt = $p_final * $v;
+                    $escalas[$v] = [
+                        'caja' => $p_caja,
+                        'suaje_u' => $suaje_u,
+                        'unitario' => $p_final,
+                        'subtotal' => $subt,
+                        'total_iva' => $subt * 1.16,
+                        'costo_u' => $base_costo_caja + $suaje_u,
+                        'detalles' => false
+                    ];
+                }
+                
+                if (!empty($tabla_volumenes)) {
+                    foreach($tabla_volumenes as $v => $info) {
+                        $p_caja = $info['precio_caja_sin_iva'];
+                        $suaje_u = $info['precio_suaje_pieza'];
+                        $p_final = $info['precio_total_sin_iva'];
+                        $subt = $p_final * $v;
+                        // Calculamos el costo base real unitario sumando procesos sin utilidades
+                        $costo_base = ($info['costo_material_total'] + $info['costo_procesos_total'] + $info['costo_suajado_total']) / $v;
+                        $escalas[$v] = [
+                            'caja' => $p_caja,
+                            'suaje_u' => $suaje_u,
+                            'unitario' => $p_final,
+                            'subtotal' => $subt,
+                            'total_iva' => $subt * 1.16,
+                            'costo_u' => $costo_base,
+                            'detalles' => $info
+                        ];
+                    }
+                }
             }
         }
     }
 }
 ?>
+
+<?php if (isset($_SESSION['mensaje_cotizacion'])): ?>
+    <div class="alert alert-<?php echo $_SESSION['tipo_mensaje_cotizacion']; ?> alert-dismissible fade show" role="alert">
+        <?php echo $_SESSION['mensaje_cotizacion']; ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    <?php 
+        unset($_SESSION['mensaje_cotizacion']);
+        unset($_SESSION['tipo_mensaje_cotizacion']);
+    ?>
+<?php endif; ?>
+
 <div class="card">
 	<div class="card-header">
 		<h5>Información de la caja</h5>
@@ -371,43 +426,72 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                 ?>
             <?php endforeach; ?>
         </p>
-        <table class="table table-bordered table-hover">
-                <tr>
-                        <th>IVA</th>
-                        <th>Desarrollo</th>
-                        <th>1</th>
-                        <th>25</th>
-                        <th>50</th>
-                        <th>100</th>
-                        <th>200</th>
-                        <th>500</th>
-                        <th>>1000</th>
-                </tr>
-                <tr>
-                        <td>Sin IVA</td>
-                        <td>$<?php echo number_format($cotizacion['precio_suaje'],2); ?></td>
-                        <td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*3,2); ?></td>
-                        <td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.3,2); ?></td>
-                        <td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.22,2); ?></td>
-                        <td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.16,2); ?></td>
-                        <td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.11,2); ?></td>
-                        <td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva']*1.05,2); ?></td>
-                        <td>$<?php echo number_format($cotizacion['precio_pieza_sin_iva'],2); ?></td>
-                </tr>
-                <tr>
-                        <td>Con IVA</td>
-                        <td>$<?php echo number_format($cotizacion['precio_suaje']*1.16,2); ?></td>
-                        <td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*3,2); ?></td>
-                        <td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.3,2); ?></td>
-                        <td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.22,2); ?></td>
-                        <td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.16,2); ?></td>
-                        <td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.11,2); ?></td>
-                        <td>$<?php echo number_format($cotizacion['precio_pieza_con_iva']*1.05,2); ?></td>
-                        <td>$<?php echo number_format($cotizacion['precio_pieza_con_iva'],2); ?></td>
-                </tr>
-        </table>
-        <div class="mt-2">
-            <button class="btn btn-sm btn-secondary float-right" type="button" data-bs-toggle="collapse" data-bs-target="#desglose" aria-expanded="false" aria-controls="desglose">Detalles</button>
+        
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover text-center align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Volumen</th>
+                        <th>Costo Caja (s/IVA)</th>
+                        <th>Desarrollo / Pza (s/IVA)</th>
+                        <th>Precio Final Unitario (s/IVA)</th>
+                        <th>Subtotal</th>
+                        <th>Total con IVA</th>
+                        <th>Info</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($escalas as $v => $esc): ?>
+                        <tr>
+                            <td><strong><?php echo number_format($v); ?></strong></td>
+                            <td>$<?php echo number_format($esc['caja'], 2); ?></td>
+                            <td>$<?php echo number_format($esc['suaje_u'], 2); ?> <br><small class="text-muted">(Total: $<?php echo number_format($esc['suaje_u']*$v, 2); ?>)</small></td>
+                            <td class="table-success fw-bold text-success">$<?php echo number_format($esc['unitario'], 2); ?></td>
+                            <td>$<?php echo number_format($esc['subtotal'], 2); ?></td>
+                            <td>$<?php echo number_format($esc['total_iva'], 2); ?></td>
+                            <td>
+                                <?php if($esc['detalles']): ?>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#detalle_vol_<?php echo $v; ?>"><i class="fa-solid fa-circle-info"></i></button>
+                                <?php else: ?>
+                                    <span class="text-muted">-</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php if($esc['detalles']): ?>
+                            <tr class="collapse" id="detalle_vol_<?php echo $v; ?>">
+                                <td colspan="7" class="text-start bg-light p-3">
+                                    <div class="row text-muted small">
+                                        <div class="col-md-4">
+                                            <strong>Producción:</strong><br>
+                                            Piezas por golpe: <?php echo $esc['detalles']['piezas_por_golpe']; ?><br>
+                                            Golpes necesarios: <?php echo $esc['detalles']['golpes']; ?>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Costos de Suaje:</strong><br>
+                                            cm de suaje: <?php echo number_format($esc['detalles']['cm_suaje_total'],2); ?> cm<br>
+                                            Costo suajado: $<?php echo number_format($esc['detalles']['costo_suajado_total'],2); ?>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Costos Internos Caja:</strong><br>
+                                            Material: $<?php echo number_format($esc['detalles']['costo_material_total'],2); ?><br>
+                                            Procesos: $<?php echo number_format($esc['detalles']['costo_procesos_total'],2); ?>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="mt-3 d-flex justify-content-between align-items-center">
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#desglose" aria-expanded="false" aria-controls="desglose">
+                <i class="fa-solid fa-list me-1"></i> Detalles Técnicos
+            </button>
+            <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#guardarCotizacionModal">
+                <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Cotización
+            </button>
         </div>
         <div class="collapse mt-2" id="desglose">
             <div class="card card-body">
@@ -472,61 +556,81 @@ if (isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])) {
                 <p><strong>Costo millar con IVA:</strong> $<?php echo number_format($cotizacion['costo_millar_con_iva'],2); ?></p>
             </div>
         </div>
-        <?php if($tabla_volumenes): ?>
-        <hr class="my-4">
-        <table class="table table-bordered table-hover">
-            <tr>
-                <th></th>
-                <?php foreach($tabla_volumenes as $vol => $info): ?>
-                    <th><?php echo number_format($vol); ?></th>
-                <?php endforeach; ?>
-            </tr>
-            <tr>
-                <td>Precio caja sin IVA</td>
-                <?php foreach($tabla_volumenes as $info): ?>
-                    <td>$<?php echo number_format($info['precio_caja_sin_iva'],2); ?></td>
-                <?php endforeach; ?>
-            </tr>
-            <tr>
-                <td>Desarrollo por pieza sin IVA</td>
-                <?php foreach($tabla_volumenes as $info): ?>
-                    <td>$<?php echo number_format($info['precio_suaje_pieza'],2); ?></td>
-                <?php endforeach; ?>
-            </tr>
-            <tr>
-                <td>Caja + desarrollo sin IVA</td>
-                <?php foreach($tabla_volumenes as $info): ?>
-                    <td>$<?php echo number_format($info['precio_total_sin_iva'],2); ?></td>
-                <?php endforeach; ?>
-            </tr>
-            <tr>
-                <td>Caja + desarrollo con IVA</td>
-                <?php foreach($tabla_volumenes as $info): ?>
-                    <td>$<?php echo number_format($info['precio_total_con_iva'],2); ?></td>
-                <?php endforeach; ?>
-            </tr>
-            <tr>
-                <td>Detalles</td>
-                <?php foreach($tabla_volumenes as $vol => $info): ?>
-                    <td><button class="btn btn-sm btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#detalle_<?php echo $vol; ?>" aria-expanded="false" aria-controls="detalle_<?php echo $vol; ?>">Detalles</button></td>
-                <?php endforeach; ?>
-            </tr>
-        </table>
-        <?php foreach($tabla_volumenes as $vol => $info): ?>
-        <div class="collapse mt-2" id="detalle_<?php echo $vol; ?>">
-            <div class="card card-body">
-                <p><strong>Piezas por golpe:</strong> <?php echo $info['piezas_por_golpe']; ?></p>
-                <p><strong>Golpes necesarios:</strong> <?php echo $info['golpes']; ?></p>
-                <p><strong>cm de suaje:</strong> <?php echo number_format($info['cm_suaje_total'],2); ?> cm</p>
-                <p><strong>Costo material:</strong> $<?php echo number_format($info['costo_material_total'],2); ?></p>
-                <p><strong>Costo procesos sin suajado:</strong> $<?php echo number_format($info['costo_procesos_total'],2); ?></p>
-                <p><strong>Costo suajado:</strong> $<?php echo number_format($info['costo_suajado_total'],2); ?></p>
-            </div>
-        </div>
-        <?php endforeach; ?>
-        <?php endif; ?>
     </div>
 </div>
+
+<!-- Modal Guardar Cotización -->
+<div class="modal fade" id="guardarCotizacionModal" tabindex="-1" aria-labelledby="guardarCotizacionModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="index.php?action=guardar_cotizacion">
+          <div class="modal-header">
+            <h5 class="modal-title" id="guardarCotizacionModalLabel">Guardar Cotización Borrador</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+                <label for="cliente_id" class="form-label">Cliente</label>
+                <select class="form-control" name="cliente_id" id="cliente_id" required>
+                    <option value="">Seleccione un cliente...</option>
+                    <?php
+                        $clientes_res = $conn->query("SELECT id, nombre_empresa FROM clientes ORDER BY nombre_empresa ASC");
+                        while($cl = $clientes_res->fetch_assoc()) {
+                            echo '<option value="'.$cl['id'].'">'.htmlspecialchars($cl['nombre_empresa']).'</option>';
+                        }
+                    ?>
+                </select>
+                <div class="mt-1 text-right">
+                    <small class="text-muted">Debe existir al menos un cliente en la BD para guardar.</small>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Escala de Volumen</label>
+                <select class="form-control" id="escala_precio">
+                    <option value="" disabled selected>Seleccione el volumen a guardar...</option>
+                    <?php foreach($escalas as $v => $esc): ?>
+                        <option value="<?php echo $v; ?>" data-precio="<?php echo htmlspecialchars($esc['unitario']); ?>" data-costo="<?php echo htmlspecialchars($esc['costo_u']); ?>">
+                            <?php echo number_format($v); ?> piezas ($<?php echo number_format($esc['unitario'], 2); ?> c/u)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="cantidad" class="form-label">Cantidad a cotizar</label>
+                <input type="number" class="form-control" name="cantidad" id="cantidad" required min="1">
+            </div>
+            <div class="mb-3">
+                <label for="precio_unitario" class="form-label">Precio Final Unitario (Caja + Desarrollo s/IVA)</label>
+                <input type="number" class="form-control" name="precio_unitario" id="precio_unitario" required min="0" step="0.01">
+                <small class="text-muted">El precio cambia según la escala, pero puede ajustarlo manualmente.</small>
+            </div>
+            <div class="mb-3">
+                <label for="costo_unitario" class="form-label">Costo Unitario Interno (Subtotal)</label>
+                <input type="number" class="form-control" name="costo_unitario" id="costo_unitario" required min="0" step="0.0001" readonly>
+                <small class="text-muted">Costo interno calculado por el sistema (solo material y procesos, sin utilidad).</small>
+            </div>
+            
+            <input type="hidden" name="largo" value="<?php echo htmlspecialchars($l); ?>">
+            <input type="hidden" name="ancho" value="<?php echo htmlspecialchars($a); ?>">
+            <input type="hidden" name="alto" value="<?php echo htmlspecialchars($h); ?>">
+            <input type="hidden" name="id_material" value="<?php echo htmlspecialchars($selected_material); ?>">
+            <input type="hidden" name="id_armado" value="<?php echo htmlspecialchars($selected_armado); ?>">
+            <input type="hidden" name="impresion_offset" value="<?php echo !empty($_GET['offset']) ? 1 : 0; ?>">
+            <input type="hidden" name="offset_tintas" value="<?php echo htmlspecialchars($_GET['offset_tintas'] ?? 1); ?>">
+            <input type="hidden" name="acabados_ids" value="<?php echo htmlspecialchars(implode(',', $_GET['acabados'] ?? [])); ?>">
+            <!-- Se guarda el nombre del armado para la descripcion general -->
+            <input type="hidden" name="armado_nombre" value="<?php echo htmlspecialchars($cotizacion['armado_nombre']); ?>">
+            <input type="hidden" name="material_descripcion" value="<?php echo htmlspecialchars($cotizacion['material']['descripcion']); ?>">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-success">Guardar Cotización</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <?php elseif ($error_medidas && isset($_GET['largo'], $_GET['ancho'], $_GET['alto'])): ?>
 <div class="alert alert-danger mt-3">Las medidas calculadas del sustrato exceden el tamaño máximo del material seleccionado.</div>
 <?php endif; ?>
@@ -573,6 +677,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 divOffsetOptions.style.display = 'block';
             }else{
                 divOffsetOptions.style.display = 'none';
+            }
+        });
+    }
+
+    const escalaPrecio = document.getElementById('escala_precio');
+    const inputCantidad = document.getElementById('cantidad');
+    const inputPrecioUnitario = document.getElementById('precio_unitario');
+    const inputCostoUnitario = document.getElementById('costo_unitario');
+
+    if(escalaPrecio && inputCantidad && inputPrecioUnitario) {
+        escalaPrecio.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            inputCantidad.value = this.value;
+            inputPrecioUnitario.value = parseFloat(selectedOption.dataset.precio).toFixed(2);
+            if(inputCostoUnitario) {
+                inputCostoUnitario.value = parseFloat(selectedOption.dataset.costo).toFixed(4);
             }
         });
     }
